@@ -1,0 +1,11 @@
+package: github.com/kebabmane/tureloGo
+import:
+- package: github.com/gorilla/mux
+  version: 2d5fef06b891c971b14aa6f71ca5ab6c03a36e0e
+- package: gopkg.in/mgo.v2
+  version: 3f83fa5005286a7fe593b055f0d7771a7dce4655
+  subpackages:
+  - bson
+  - internal/json
+  - internal/sasl
+  - internal/scram
