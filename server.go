@@ -5,16 +5,17 @@ import (
 	"net/http"
 
 	"github.com/Sirupsen/logrus"
+	dbx "github.com/go-ozzo/ozzo-dbx"
 	"github.com/go-ozzo/ozzo-routing"
 	"github.com/go-ozzo/ozzo-routing/auth"
 	"github.com/go-ozzo/ozzo-routing/content"
 	"github.com/go-ozzo/ozzo-routing/cors"
-	_ "github.com/lib/pq"
-
 	"github.com/kebabmane/tureloGo/apis"
 	"github.com/kebabmane/tureloGo/app"
 	"github.com/kebabmane/tureloGo/daos"
 	"github.com/kebabmane/tureloGo/errors"
+	"github.com/kebabmane/tureloGo/services"
+	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -34,7 +35,7 @@ func main() {
 	// connect to the database
 	db, err := dbx.MustOpen("postgres", app.Config.DSN)
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("Database connection error: ", err))
 	}
 	db.LogFunc = logger.Infof
 
@@ -74,8 +75,8 @@ func buildRouter(logger *logrus.Logger, db *dbx.DB) *routing.Router {
 		TokenHandler:  apis.JWTHandler,
 	}))
 
-	artistDAO := daos.NewArtistDAO()
-	apis.ServeArtistResource(rg, services.NewArtistService(artistDAO))
+	feedDAO := daos.NewFeedDAO()
+	apis.ServeFeedResource(rg, services.NewFeedService(feedDAO))
 
 	// wire up more resource APIs here
 

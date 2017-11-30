@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/go-ozzo/ozzo-dbx"
 )
 
 // RequestScope contains the application-specific information that are carried around in a request.

@@ -20,22 +20,22 @@ type (
 	}
 
 	// artistResource defines the handlers for the CRUD APIs.
-	artistResource struct {
-		service artistService
+	feedResource struct {
+		service feedService
 	}
 )
 
 // ServeArtist sets up the routing of artist endpoints and the corresponding handlers.
-func ServeArtistResource(rg *routing.RouteGroup, service artistService) {
-	r := &artistResource{service}
-	rg.Get("/artists/<id>", r.get)
-	rg.Get("/artists", r.query)
-	rg.Post("/artists", r.create)
-	rg.Put("/artists/<id>", r.update)
-	rg.Delete("/artists/<id>", r.delete)
+func ServeFeedResource(rg *routing.RouteGroup, service feedService) {
+	r := &feedResource{service}
+	rg.Get("/feeds/<id>", r.get)
+	rg.Get("/feeds", r.query)
+	rg.Post("/feeds", r.create)
+	rg.Put("/feeds/<id>", r.update)
+	rg.Delete("/feeds/<id>", r.delete)
 }
 
-func (r *artistResource) get(c *routing.Context) error {
+func (r *feedResource) get(c *routing.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		return err
@@ -49,7 +49,7 @@ func (r *artistResource) get(c *routing.Context) error {
 	return c.Write(response)
 }
 
-func (r *artistResource) query(c *routing.Context) error {
+func (r *feedResource) query(c *routing.Context) error {
 	rs := app.GetRequestScope(c)
 	count, err := r.service.Count(rs)
 	if err != nil {
@@ -64,8 +64,8 @@ func (r *artistResource) query(c *routing.Context) error {
 	return c.Write(paginatedList)
 }
 
-func (r *artistResource) create(c *routing.Context) error {
-	var model models.Artist
+func (r *feedResource) create(c *routing.Context) error {
+	var model models.Feed
 	if err := c.Read(&model); err != nil {
 		return err
 	}
@@ -77,7 +77,7 @@ func (r *artistResource) create(c *routing.Context) error {
 	return c.Write(response)
 }
 
-func (r *artistResource) update(c *routing.Context) error {
+func (r *feedResource) update(c *routing.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		return err
@@ -102,7 +102,7 @@ func (r *artistResource) update(c *routing.Context) error {
 	return c.Write(response)
 }
 
-func (r *artistResource) delete(c *routing.Context) error {
+func (r *feedResource) delete(c *routing.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		return err

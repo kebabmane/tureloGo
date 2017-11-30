@@ -3,6 +3,8 @@ package errors
 import (
 	"net/http"
 	"sort"
+
+	"github.com/go-ozzo/ozzo-validation"
 )
 
 type validationError struct {

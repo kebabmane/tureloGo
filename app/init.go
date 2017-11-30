@@ -10,6 +10,7 @@ import (
 	"github.com/go-ozzo/ozzo-routing"
 	"github.com/go-ozzo/ozzo-routing/access"
 	"github.com/go-ozzo/ozzo-routing/fault"
+	"github.com/go-ozzo/ozzo-validation"
 	"github.com/kebabmane/tureloGo/errors"
 )
 

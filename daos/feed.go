@@ -28,7 +28,7 @@ func (dao *FeedDAO) Create(rs app.RequestScope, feed *models.Feed) error {
 }
 
 // Update saves the changes to an artist in the database.
-func (dao *FeedDAO) Update(rs app.RequestScope, id int, feed *models.feed) error {
+func (dao *FeedDAO) Update(rs app.RequestScope, id int, feed *models.Feed) error {
 	if _, err := dao.Get(rs, id); err != nil {
 		return err
 	}

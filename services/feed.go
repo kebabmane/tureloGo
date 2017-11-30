@@ -1,4 +1,4 @@
-package dao
+package services
 
 import (
 	"github.com/kebabmane/tureloGo/app"
@@ -19,7 +19,7 @@ type FeedService struct {
 }
 
 func NewFeedService(dao feedDAO) *FeedService {
-	return &AFeedService{dao}
+	return &FeedService{dao}
 }
 
 func (s *FeedService) Get(rs app.RequestScope, id int) (*models.Feed, error) {

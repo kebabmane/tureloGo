@@ -4,7 +4,7 @@ import "github.com/go-ozzo/ozzo-validation"
 
 // Artist represents an artist record.
 type Feed struct {
-	ID       int    `json:"id" db:"id"`
+	Id       int    `json:"id" db:"id"`
 	FeedName string `json:"feedName" db:"feedName"`
 }
 
