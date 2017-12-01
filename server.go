@@ -75,10 +75,13 @@ func buildRouter(logger *logrus.Logger, db *dbx.DB) *routing.Router {
 		TokenHandler:  apis.JWTHandler,
 	}))
 
+	// wire up API resources and services + dao's here
+
 	feedDAO := daos.NewFeedDAO()
 	apis.ServeFeedResource(rg, services.NewFeedService(feedDAO))
 
-	// wire up more resource APIs here
+	categoryDAO := daos.NewCategoryDAO()
+	apis.ServeCategoryResource(rg, services.NewCategoryService(categoryDAO))
 
 	return router
 }

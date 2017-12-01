@@ -23,7 +23,7 @@ func (dao *FeedDAO) Get(rs app.RequestScope, id int) (*models.Feed, error) {
 // Create saves a new artist record in the database.
 // The Artist.Id field will be populated with an automatically generated ID upon successful saving.
 func (dao *FeedDAO) Create(rs app.RequestScope, feed *models.Feed) error {
-	feed.Id = 0
+	feed.ID = 0
 	return rs.Tx().Model(feed).Insert()
 }
 
@@ -32,7 +32,7 @@ func (dao *FeedDAO) Update(rs app.RequestScope, id int, feed *models.Feed) error
 	if _, err := dao.Get(rs, id); err != nil {
 		return err
 	}
-	feed.Id = id
+	feed.ID = id
 	return rs.Tx().Model(feed).Exclude("Id").Update()
 }
 

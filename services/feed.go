@@ -33,7 +33,7 @@ func (s *FeedService) Create(rs app.RequestScope, model *models.Feed) (*models.F
 	if err := s.dao.Create(rs, model); err != nil {
 		return nil, err
 	}
-	return s.dao.Get(rs, model.Id)
+	return s.dao.Get(rs, model.ID)
 }
 
 func (s *FeedService) Update(rs app.RequestScope, id int, model *models.Feed) (*models.Feed, error) {
