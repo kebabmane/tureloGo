@@ -2,7 +2,7 @@
 # Make sure you override this in production with the environment variable: RESTFUL_DSN
 dsn: "postgres://postgres:postgres@127.0.0.1:5432/turelogo?sslmode=disable"
 
-# dsn: "postgres://nsidlvwimhftfr:28eedff491ee8f8053d5069dea630f9445bd87defeb57dbaf05508d5d5ec1014@ec2-54-243-58-69.compute-1.amazonaws.com:5432/dfk7h9np34aaee"
+RESTFUL_DSN: "postgres://nsidlvwimhftfr:28eedff491ee8f8053d5069dea630f9445bd87defeb57dbaf05508d5d5ec1014@ec2-54-243-58-69.compute-1.amazonaws.com:5432/dfk7h9np34aaee"
 
 # These are secret keys used for JWT signing and verification.
 # Make sure you override these keys in production by the following environment variables:
