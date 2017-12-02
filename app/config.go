@@ -52,7 +52,6 @@ func LoadConfig(configPaths ...string) error {
 		v.SetDefault("server_port", os.Getenv("PORT"))
 	}
 	if os.Getenv("DATABASE_URL") == "" {
-		v.SetDefault("dsn", `mapstructure:"dsn"`)
 	} else {
 		v.SetDefault("dsn", os.Getenv("DATABASE_URL"))
 	}
