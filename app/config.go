@@ -46,10 +46,15 @@ func LoadConfig(configPaths ...string) error {
 	v.AutomaticEnv()
 	v.SetDefault("error_file", "config/errors.yaml")
 	if os.Getenv("PORT") == "" {
-		log.Fatal("$PORT must be set, setting default")
+		log.Printf("$PORT must be set, setting default")
 		v.SetDefault("server_port", 8080)
 	} else {
 		v.SetDefault("server_port", os.Getenv("PORT"))
+	}
+	if os.Getenv("DATABASE_URL") == "" {
+		v.SetDefault("dsn", `mapstructure:"dsn"`)
+	} else {
+		v.SetDefault("dsn", os.Getenv("DATABASE_URL"))
 	}
 	v.SetDefault("jwt_signing_method", "HS256")
 	for _, path := range configPaths {
