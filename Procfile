@@ -1,1 +1,1 @@
-api: tureloGo
+web: tureloGo
