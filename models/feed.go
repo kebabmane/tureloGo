@@ -1,6 +1,8 @@
 package models
 
-import "github.com/go-ozzo/ozzo-validation"
+import (
+	"github.com/go-ozzo/ozzo-validation"
+)
 
 // Feed represents an feed record.
 type Feed struct {
