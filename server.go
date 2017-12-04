@@ -83,5 +83,8 @@ func buildRouter(logger *logrus.Logger, db *dbx.DB) *routing.Router {
 	categoryDAO := daos.NewCategoryDAO()
 	apis.ServeCategoryResource(rg, services.NewCategoryService(categoryDAO))
 
+	feedEntryDAO := daos.NewFeedEntryDAO()
+	apis.ServeFeedEntryResource(rg, services.NewFeedEntryService(feedEntryDAO))
+
 	return router
 }
