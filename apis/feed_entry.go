@@ -28,11 +28,11 @@ type (
 // ServeArtist sets up the routing of artist endpoints and the corresponding handlers.
 func ServeFeedEntryResource(rg *routing.RouteGroup, service feedEntryService) {
 	r := &feedEntryResource{service}
-	rg.Get("/feed_entries/<id>", r.get)
-	rg.Get("/feed_entries", r.query)
-	rg.Post("/feed_entries", r.create)
-	rg.Put("/feed_entries/<id>", r.update)
-	rg.Delete("/feed_entries/<id>", r.delete)
+	rg.Get("/feeds/<feed_id>/<id>", r.get)
+	rg.Get("/feeds/feed_entries", r.query)
+	rg.Post("/feeds/feed_entries", r.create)
+	rg.Put("/feeds/<feed_id>/<id>", r.update)
+	rg.Delete("/feeds/<feed_id>/<id>", r.delete)
 }
 
 func (r *feedEntryResource) get(c *routing.Context) error {

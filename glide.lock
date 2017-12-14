@@ -1,5 +1,5 @@
 hash: 414eceea4c30381274168e105f0ac2c8ec60dfd7a03fac98797c7985fa5cee3e
-updated: 2017-11-30T22:34:14.469776+11:00
+updated: 2017-12-11T07:48:58.808719+11:00
 imports:
 - name: github.com/dgrijalva/jwt-go
   version: dbeaa9332f19a944acb5736b4456cfcc02140e29
@@ -28,6 +28,7 @@ imports:
   subpackages:
   - hcl/ast
   - hcl/parser
+  - hcl/printer
   - hcl/scanner
   - hcl/strconv
   - hcl/token
@@ -57,7 +58,7 @@ imports:
 - name: github.com/spf13/pflag
   version: 7aff26db30c1be810f9de5038ec5ef96ac41fd7c
 - name: github.com/spf13/viper
-  version: 4dddf7c62e16bce5807744018f5b753bfe21bbd2
+  version: 1a0c4a370c3e8286b835467d2dfcdaf636c3538b
 - name: golang.org/x/crypto
   version: 94eea52f7b742c7cbe0b03b22f0c4c8631ece122
   subpackages:
