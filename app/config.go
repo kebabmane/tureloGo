@@ -29,7 +29,7 @@ type appConfig struct {
 
 func (config appConfig) Validate() error {
 	return validation.ValidateStruct(&config,
-		validation.Field(&config.DSN, validation.Required),
+		// validation.Field(&config.DSN, validation.Required),
 		validation.Field(&config.JWTSigningKey, validation.Required),
 		validation.Field(&config.JWTVerificationKey, validation.Required),
 	)
