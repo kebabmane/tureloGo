@@ -42,7 +42,7 @@ func LoadConfig(configPaths ...string) error {
 	v := viper.New()
 	v.SetConfigName("app")
 	v.SetConfigType("yaml")
-	v.SetEnvPrefix("restful")
+	v.SetEnvPrefix("production")
 	v.AutomaticEnv()
 	v.SetDefault("error_file", "config/errors.yaml")
 	if os.Getenv("PORT") == "" {
