@@ -51,6 +51,11 @@ func LoadConfig(configPaths ...string) error {
 	} else {
 		v.SetDefault("server_port", os.Getenv("PORT"))
 	}
+	if os.Getenv("DATABASE_URL") == "" {
+		log.Printf("$DATABASE_URL must be set, setting default")
+	} else {
+		v.SetDefault("dsn", os.Getenv("DATABASE_URL"))
+	}
 	v.SetDefault("jwt_signing_method", "HS256")
 	for _, path := range configPaths {
 		v.AddConfigPath(path)
