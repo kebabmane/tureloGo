@@ -67,7 +67,7 @@ func LoadConfig(configPaths ...string) error {
 	} else {
 		log.Printf("Setting database via env")
 		log.Printf("DATABASE_URL:", os.Getenv("DATABASE_URL"))
-		v.SetDefault("dsn", os.Getenv("DATABASE_URL"))
+		v.Set("dsn", os.Getenv("DATABASE_URL"))
 		log.Printf("dsn to be set:", v.GetString("dsn"))
 	}
 	return Config.Validate()
