@@ -37,7 +37,7 @@ func (config appConfig) Validate() error {
 
 // LoadConfig loads configuration from the given list of paths and populates it into the Config variable.
 // The configuration file(s) should be named as app.yaml.
-// Environment variables with the prefix "RESTFUL_" in their names are also read automatically.
+// Environment variables with the prefix "PRODUCTION_" in their names are also read automatically.
 func LoadConfig(configPaths ...string) error {
 	v := viper.New()
 	v.SetConfigName("app")
@@ -58,11 +58,13 @@ func LoadConfig(configPaths ...string) error {
 	if os.Getenv("PORT") == "" {
 		log.Printf("$PORT must be set, setting default")
 	} else {
+		log.Printf("Setting port via env")
 		v.SetDefault("server_port", os.Getenv("PORT"))
 	}
 	if os.Getenv("DATABASE_URL") == "" {
 		log.Printf("$DATABASE_URL must be set, setting default")
 	} else {
+		log.Printf("Setting database via env")
 		v.SetDefault("dsn", os.Getenv("DATABASE_URL"))
 	}
 	return Config.Validate()
