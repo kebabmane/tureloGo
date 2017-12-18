@@ -45,17 +45,6 @@ func LoadConfig(configPaths ...string) error {
 	v.SetEnvPrefix("production")
 	v.AutomaticEnv()
 	v.SetDefault("error_file", "config/errors.yaml")
-	if os.Getenv("PORT") == "" {
-		log.Printf("$PORT must be set, setting default")
-		v.SetDefault("server_port", 8080)
-	} else {
-		v.SetDefault("server_port", os.Getenv("PORT"))
-	}
-	if os.Getenv("DATABASE_URL") == "" {
-		log.Printf("$DATABASE_URL must be set, setting default")
-	} else {
-		v.SetDefault("dsn", os.Getenv("DATABASE_URL"))
-	}
 	v.SetDefault("jwt_signing_method", "HS256")
 	for _, path := range configPaths {
 		v.AddConfigPath(path)
@@ -65,6 +54,16 @@ func LoadConfig(configPaths ...string) error {
 	}
 	if err := v.Unmarshal(&Config); err != nil {
 		return err
+	}
+	if os.Getenv("PORT") == "" {
+		log.Printf("$PORT must be set, setting default")
+	} else {
+		v.SetDefault("server_port", os.Getenv("PORT"))
+	}
+	if os.Getenv("DATABASE_URL") == "" {
+		log.Printf("$DATABASE_URL must be set, setting default")
+	} else {
+		v.SetDefault("dsn", os.Getenv("DATABASE_URL"))
 	}
 	return Config.Validate()
 }
