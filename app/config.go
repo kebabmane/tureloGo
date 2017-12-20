@@ -29,7 +29,7 @@ type appConfig struct {
 
 func (config appConfig) Validate() error {
 	return validation.ValidateStruct(&config,
-		// validation.Field(&config.DSN, validation.Required),
+		validation.Field(&config.DSN, validation.Required),
 		validation.Field(&config.JWTSigningKey, validation.Required),
 		validation.Field(&config.JWTVerificationKey, validation.Required),
 	)
@@ -42,7 +42,6 @@ func LoadConfig(configPaths ...string) error {
 	v := viper.New()
 	v.SetConfigName("app")
 	v.SetConfigType("yaml")
-	v.SetEnvPrefix("production")
 	v.AutomaticEnv()
 	v.SetDefault("error_file", "config/errors.yaml")
 	v.SetDefault("jwt_signing_method", "HS256")
@@ -67,6 +66,7 @@ func LoadConfig(configPaths ...string) error {
 	} else {
 		log.Printf("Setting database via env")
 		log.Printf("DATABASE_URL:", os.Getenv("DATABASE_URL"))
+		v.BindEnv("DATABASE_URL")
 		v.SetDefault("dsn", os.Getenv("DATABASE_URL"))
 		log.Printf("dsn to be set:", v.GetString("dsn"))
 	}
