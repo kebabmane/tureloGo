@@ -1,0 +1,15 @@
+# The Data Source Name for the database
+# Make sure you override this in production with the environment variable: RESTFUL_DSN
+dsn: postgres://nsidlvwimhftfr:28eedff491ee8f8053d5069dea630f9445bd87defeb57dbaf05508d5d5ec1014@ec2-54-243-58-69.compute-1.amazonaws.com:5432/dfk7h9np34aaee"
+
+server_port: "8080"
+
+# These are secret keys used for JWT signing and verification.
+# Make sure you override these keys in production by the following environment variables:
+#   RESTFUL_JWT_VERIFICATION_KEY
+#   RESTFUL_JWT_SIGNING_KEY
+jwt_verification_key: "QfCAH04Cob7b71QCqy738vw5XGSnFZ9d"
+jwt_signing_key: "QfCAH04Cob7b71QCqy738vw5XGSnFZ9d"
+# Uncomment the following line and set an appropriate JWT signing method, if needed
+# The default signing method is HS256.
+#jwt_signing_method: "HS256"
