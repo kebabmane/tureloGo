@@ -54,8 +54,7 @@ func LoadConfig(configPaths ...string) error {
 	if err := v.Unmarshal(&Config); err != nil {
 		return err
 	}
-	log.Printf("$DATABASE_URL must be set, setting default")
 	log.Printf("$DSN must be set, setting default")
-	log.Printf("dsn to be set:", v.GetString("dsn"))
+	log.Printf("dsn to be set:", v.GetString("production_dsn"))
 	return Config.Validate()
 }
