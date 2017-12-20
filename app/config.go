@@ -2,8 +2,6 @@ package app
 
 import (
 	"fmt"
-	"log"
-	"os"
 
 	"github.com/go-ozzo/ozzo-validation"
 	"github.com/spf13/viper"
@@ -42,6 +40,7 @@ func LoadConfig(configPaths ...string) error {
 	v := viper.New()
 	v.SetConfigName("app")
 	v.SetConfigType("yaml")
+	v.SetEnvPrefix("PRODUCTION")
 	v.AutomaticEnv()
 	v.SetDefault("error_file", "config/errors.yaml")
 	v.SetDefault("jwt_signing_method", "HS256")
@@ -54,12 +53,5 @@ func LoadConfig(configPaths ...string) error {
 	if err := v.Unmarshal(&Config); err != nil {
 		return err
 	}
-	if os.Getenv("PORT") == "" {
-		log.Printf("$PORT must be set, setting default")
-	} else {
-		log.Printf("Setting port via env")
-		v.SetDefault("server_port", os.Getenv("PORT"))
-	}
-	v.SetDefault("dsn", os.Getenv("DATABASE_URL"))
 	return Config.Validate()
 }
