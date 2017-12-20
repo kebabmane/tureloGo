@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/go-ozzo/ozzo-validation"
 	"github.com/spf13/viper"
@@ -53,5 +54,8 @@ func LoadConfig(configPaths ...string) error {
 	if err := v.Unmarshal(&Config); err != nil {
 		return err
 	}
+	log.Printf("$DATABASE_URL must be set, setting default")
+	log.Printf("$DSN must be set, setting default")
+	log.Printf("dsn to be set:", v.GetString("dsn"))
 	return Config.Validate()
 }
