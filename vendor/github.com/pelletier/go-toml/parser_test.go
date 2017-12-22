@@ -9,7 +9,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 )
 
-func assertSubTree(t *testing.T, path []string, tree *Tree, err error, ref map[string]interface{}) {
+func assertSubTree(t *testing.T, path []string, tree *TomlTree, err error, ref map[string]interface{}) {
 	if err != nil {
 		t.Error("Non-nil error:", err.Error())
 		return
@@ -20,12 +20,12 @@ func assertSubTree(t *testing.T, path []string, tree *Tree, err error, ref map[s
 		// NOTE: directly access key instead of resolve by path
 		// NOTE: see TestSpecialKV
 		switch node := tree.GetPath([]string{k}).(type) {
-		case []*Tree:
+		case []*TomlTree:
 			t.Log("\tcomparing key", nextPath, "by array iteration")
 			for idx, item := range node {
 				assertSubTree(t, nextPath, item, err, v.([]map[string]interface{})[idx])
 			}
-		case *Tree:
+		case *TomlTree:
 			t.Log("\tcomparing key", nextPath, "by subtree assestion")
 			assertSubTree(t, nextPath, node, err, v.(map[string]interface{}))
 		default:
@@ -37,14 +37,14 @@ func assertSubTree(t *testing.T, path []string, tree *Tree, err error, ref map[s
 	}
 }
 
-func assertTree(t *testing.T, tree *Tree, err error, ref map[string]interface{}) {
+func assertTree(t *testing.T, tree *TomlTree, err error, ref map[string]interface{}) {
 	t.Log("Asserting tree:\n", spew.Sdump(tree))
 	assertSubTree(t, []string{}, tree, err, ref)
 	t.Log("Finished tree assertion.")
 }
 
 func TestCreateSubTree(t *testing.T) {
-	tree := newTree()
+	tree := newTomlTree()
 	tree.createSubTree([]string{"a", "b", "c"}, Position{})
 	tree.Set("a.b.c", 42)
 	if tree.Get("a.b.c") != 42 {
@@ -177,16 +177,6 @@ func TestStringEscapables(t *testing.T) {
 	})
 }
 
-func TestEmptyQuotedString(t *testing.T) {
-	tree, err := Load(`[""]
-"" = 1`)
-	assertTree(t, tree, err, map[string]interface{}{
-		"": map[string]interface{}{
-			"": int64(1),
-		},
-	})
-}
-
 func TestBools(t *testing.T) {
 	tree, err := Load("a = true\nb = false")
 	assertTree(t, tree, err, map[string]interface{}{
@@ -280,17 +270,6 @@ func TestArrayNested(t *testing.T) {
 	tree, err := Load("a = [[42, 21], [10]]")
 	assertTree(t, tree, err, map[string]interface{}{
 		"a": [][]int64{{int64(42), int64(21)}, {int64(10)}},
-	})
-}
-
-func TestNestedArrayComment(t *testing.T) {
-	tree, err := Load(`
-someArray = [
-# does not work
-["entry1"]
-]`)
-	assertTree(t, tree, err, map[string]interface{}{
-		"someArray": [][]string{{"entry1"}},
 	})
 }
 
@@ -467,7 +446,7 @@ func TestDuplicateKeys(t *testing.T) {
 
 func TestEmptyIntermediateTable(t *testing.T) {
 	_, err := Load("[foo..bar]")
-	if err.Error() != "(1, 2): invalid table array key: empty table key" {
+	if err.Error() != "(1, 2): empty intermediate table" {
 		t.Error("Bad error message:", err.Error())
 	}
 }
@@ -500,8 +479,7 @@ func TestFloatsWithoutLeadingZeros(t *testing.T) {
 
 func TestMissingFile(t *testing.T) {
 	_, err := LoadFile("foo.toml")
-	if err.Error() != "open foo.toml: no such file or directory" &&
-		err.Error() != "open foo.toml: The system cannot find the file specified." {
+	if err.Error() != "open foo.toml: no such file or directory" {
 		t.Error("Bad error message:", err.Error())
 	}
 }
@@ -592,12 +570,12 @@ func TestParseKeyGroupArray(t *testing.T) {
 
 func TestParseKeyGroupArrayUnfinished(t *testing.T) {
 	_, err := Load("[[foo.bar]\na = 42")
-	if err.Error() != "(1, 10): was expecting token [[, but got unclosed table array key instead" {
+	if err.Error() != "(1, 10): was expecting token [[, but got unclosed key group array instead" {
 		t.Error("Bad error message:", err.Error())
 	}
 
 	_, err = Load("[[foo.[bar]\na = 42")
-	if err.Error() != "(1, 3): unexpected token table array key cannot contain ']', was expecting a table array key" {
+	if err.Error() != "(1, 3): unexpected token group name cannot contain ']', was expecting a key group array" {
 		t.Error("Bad error message:", err.Error())
 	}
 }
@@ -634,13 +612,12 @@ func TestParseKeyGroupArraySpec(t *testing.T) {
 	})
 }
 
-func TestTomlValueStringRepresentation(t *testing.T) {
+func TestToTomlValue(t *testing.T) {
 	for idx, item := range []struct {
 		Value  interface{}
 		Expect string
 	}{
 		{int64(12345), "12345"},
-		{uint64(50), "50"},
 		{float64(123.45), "123.45"},
 		{bool(true), "true"},
 		{"hello world", "\"hello world\""},
@@ -649,29 +626,25 @@ func TestTomlValueStringRepresentation(t *testing.T) {
 		{time.Date(1979, time.May, 27, 7, 32, 0, 0, time.UTC),
 			"1979-05-27T07:32:00Z"},
 		{[]interface{}{"gamma", "delta"},
-			"[\"gamma\",\"delta\"]"},
-		{nil, ""},
+			"[\n  \"gamma\",\n  \"delta\",\n]"},
 	} {
-		result, err := tomlValueStringRepresentation(item.Value)
-		if err != nil {
-			t.Errorf("Test %d - unexpected error: %s", idx, err)
-		}
+		result := toTomlValue(item.Value, 0)
 		if result != item.Expect {
 			t.Errorf("Test %d - got '%s', expected '%s'", idx, result, item.Expect)
 		}
 	}
 }
 
-func TestToStringMapStringString(t *testing.T) {
-	tree, err := TreeFromMap(map[string]interface{}{"m": map[string]interface{}{"v": "abc"}})
+func TestToString(t *testing.T) {
+	tree, err := Load("[foo]\n\n[[foo.bar]]\na = 42\n\n[[foo.bar]]\na = 69\n")
 	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
+		t.Errorf("Test failed to parse: %v", err)
+		return
 	}
-	want := "\n[m]\n  v = \"abc\"\n"
-	got := tree.String()
-
-	if got != want {
-		t.Errorf("want:\n%q\ngot:\n%q", want, got)
+	result := tree.ToString()
+	expected := "\n[foo]\n\n  [[foo.bar]]\n    a = 42\n\n  [[foo.bar]]\n    a = 69\n"
+	if result != expected {
+		t.Errorf("Expected got '%s', expected '%s'", result, expected)
 	}
 }
 
@@ -737,13 +710,13 @@ func TestNestedTreePosition(t *testing.T) {
 }
 
 func TestInvalidGroupArray(t *testing.T) {
-	_, err := Load("[table#key]\nanswer = 42")
+	_, err := Load("[key#group]\nanswer = 42")
 	if err == nil {
 		t.Error("Should error")
 	}
 
 	_, err = Load("[foo.[bar]\na = 42")
-	if err.Error() != "(1, 2): unexpected token table key cannot contain ']', was expecting a table key" {
+	if err.Error() != "(1, 2): unexpected token group name cannot contain ']', was expecting a key group" {
 		t.Error("Bad error message:", err.Error())
 	}
 }
@@ -757,7 +730,7 @@ func TestDoubleEqual(t *testing.T) {
 
 func TestGroupArrayReassign(t *testing.T) {
 	_, err := Load("[hello]\n[[hello]]")
-	if err.Error() != "(2, 3): key \"hello\" is already assigned and not of type table array" {
+	if err.Error() != "(2, 3): key \"hello\" is already assigned and not of type group array" {
 		t.Error("Bad error message:", err.Error())
 	}
 }

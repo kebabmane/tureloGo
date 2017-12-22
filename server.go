@@ -20,6 +20,7 @@ import (
 
 func main() {
 	// load application configurations
+
 	if err := app.LoadConfig("./config"); err != nil {
 		panic(fmt.Errorf("Invalid application configuration: %s", err))
 	}
