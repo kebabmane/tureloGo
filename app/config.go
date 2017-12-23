@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/go-ozzo/ozzo-validation"
 	"github.com/spf13/viper"
@@ -41,20 +42,36 @@ func LoadConfig(configPaths ...string) error {
 	v := viper.New()
 	v.SetConfigName("app")
 	v.SetConfigType("yaml")
-	v.SetEnvPrefix("PRODUCTION")
 	v.AutomaticEnv()
 	v.SetDefault("error_file", "config/errors.yaml")
-	v.SetDefault("jwt_signing_method", "HS256")
+
 	for _, path := range configPaths {
 		v.AddConfigPath(path)
 	}
+
 	if err := v.ReadInConfig(); err != nil {
 		return fmt.Errorf("Failed to read the configuration file: %s", err)
 	}
+
 	if err := v.Unmarshal(&Config); err != nil {
 		return err
 	}
-	log.Printf("$DSN must be set, setting default")
-	log.Printf("dsn to be set:", v.GetString("production_dsn"))
+
+	if os.Getenv("DATABASE_URL") == "" {
+		log.Printf("$DSN not set, setting default")
+	} else {
+		log.Printf("Setting database via env")
+		log.Printf("DATABASE_URL:", os.Getenv("DATABASE_URL"))
+		v.Set("dsn", os.Getenv("DATABASE_URL"))
+		log.Printf(v.GetString("dsn"))
+	}
+
+	if os.Getenv("PORT") == "" {
+		log.Printf("$PORT not set, setting from config")
+	} else {
+		log.Printf("Setting port via env")
+		v.SetDefault("server_port", os.Getenv("PORT"))
+	}
+
 	return Config.Validate()
 }
