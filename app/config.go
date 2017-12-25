@@ -50,6 +50,7 @@ func LoadConfig(configPaths ...string) error {
 		log.Printf("Running in production mode")
 	} else {
 		v.SetConfigName("development")
+		log.Printf("Running in development mode")
 	}
 
 	v.SetDefault("error_file", "config/errors.yaml")
