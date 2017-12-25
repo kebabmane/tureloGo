@@ -40,14 +40,18 @@ func (config appConfig) Validate() error {
 // Environment variables with the prefix "PRODUCTION_" in their names are also read automatically.
 func LoadConfig(configPaths ...string) error {
 	v := viper.New()
-	v.SetConfigName("app")
 	v.SetConfigType("yaml")
-	v.AutomaticEnv()
-	v.SetDefault("error_file", "config/errors.yaml")
-
 	for _, path := range configPaths {
 		v.AddConfigPath(path)
 	}
+
+	if os.Getenv("ENV") == "PRODUCTION" {
+		v.SetConfigName("production")
+	} else {
+		v.SetConfigName("development")
+	}
+
+	v.SetDefault("error_file", "config/errors.yaml")
 
 	if err := v.ReadInConfig(); err != nil {
 		return fmt.Errorf("Failed to read the configuration file: %s", err)
@@ -55,15 +59,6 @@ func LoadConfig(configPaths ...string) error {
 
 	if err := v.Unmarshal(&Config); err != nil {
 		return err
-	}
-
-	if os.Getenv("DATABASE_URL") == "" {
-		log.Printf("$DSN not set, setting default")
-	} else {
-		log.Printf("Setting database via env")
-		log.Printf("DATABASE_URL:", os.Getenv("DATABASE_URL"))
-		v.Set("dsn", "DATABASE_URL")
-		log.Printf("DSN to Use: ", v.GetString("dsn"))
 	}
 
 	if os.Getenv("PORT") == "" {
