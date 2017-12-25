@@ -66,7 +66,7 @@ func LoadConfig(configPaths ...string) error {
 		log.Printf("$PORT not set, setting from config")
 	} else {
 		log.Printf("Setting port via env")
-		v.Set("server_port", os.Getenv("PORT"))
+		v.SetDefault("server_port", os.Getenv("PORT"))
 	}
 
 	return Config.Validate()
