@@ -47,6 +47,7 @@ func LoadConfig(configPaths ...string) error {
 
 	if os.Getenv("ENV") == "PRODUCTION" {
 		v.SetConfigName("production")
+		log.Printf("Running in production mode")
 	} else {
 		v.SetConfigName("development")
 	}
