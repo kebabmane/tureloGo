@@ -50,7 +50,7 @@ func LoadConfig(configPaths ...string) error {
 		v.SetConfigName("production")
 		log.Printf("Running in production mode")
 	} else {
-		v.SetConfigName("development")
+		v.SetConfigName("app")
 		log.Printf("Running in development mode")
 	}
 
