@@ -31,7 +31,6 @@ func main() {
 		if err != nil {
 			log.Println("Unable to create Raygun client:", err.Error())
 		}
-		raygun.Silent(true)
 		log.Printf("Pew pew - raygun tracing is enabled")
 		defer raygun.HandleError()
 		panic("foo")
