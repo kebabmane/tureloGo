@@ -2,11 +2,13 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 
+	"github.com/MindscapeHQ/raygun4go"
 	"github.com/Sirupsen/logrus"
 	dbx "github.com/go-ozzo/ozzo-dbx"
-	"github.com/go-ozzo/ozzo-routing"
 	"github.com/go-ozzo/ozzo-routing/auth"
 	"github.com/go-ozzo/ozzo-routing/content"
 	"github.com/go-ozzo/ozzo-routing/cors"
@@ -20,6 +22,18 @@ import (
 
 func main() {
 	// load application configurations
+
+	if os.Getenv("RAYGUN_APIKEY") == "" {
+		log.Printf("No Raygun API KEY found, no app tracing")
+	} else {
+		raygun, err := raygun4go.New("tureloGo", os.Getenv("RAYGUN_APIKEY"))
+		if err != nil {
+			log.Println("Unable to create Raygun client:", err.Error())
+		}
+		raygun.Silent(true)
+		log.Printf("Pew pew - raygun tracing is enabled")
+		defer raygun.HandleError()
+	}
 
 	if err := app.LoadConfig("./config"); err != nil {
 		panic(fmt.Errorf("Invalid application configuration: %s", err))

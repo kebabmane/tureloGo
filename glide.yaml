@@ -9,3 +9,4 @@ import:
   - internal/json
   - internal/sasl
   - internal/scram
+- package: github.com/MindscapeHQ/raygun4go

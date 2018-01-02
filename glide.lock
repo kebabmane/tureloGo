@@ -1,5 +1,5 @@
-hash: 414eceea4c30381274168e105f0ac2c8ec60dfd7a03fac98797c7985fa5cee3e
-updated: 2018-01-02T14:08:56.264275+11:00
+hash: 6b479016449cf8d7184a43ef4ad09703d8f61283f2037dca69ddc1ed1a01da68
+updated: 2018-01-03T10:31:49.568359+11:00
 imports:
 - name: github.com/dgrijalva/jwt-go
   version: dbeaa9332f19a944acb5736b4456cfcc02140e29
@@ -40,6 +40,8 @@ imports:
   - oid
 - name: github.com/magiconair/properties
   version: 61b492c03cf472e0c6419be5899b8e0dc28b1b88
+- name: github.com/MindscapeHQ/raygun4go
+  version: 79e884e233d62b1d6260cec2cf51a0b8c6e81087
 - name: github.com/mitchellh/mapstructure
   version: ca63d7c062ee3c9f34db231e352b60012b4fd0c1
 - name: github.com/pelletier/go-buffruneio
