@@ -9,6 +9,7 @@ import (
 	"github.com/MindscapeHQ/raygun4go"
 	"github.com/Sirupsen/logrus"
 	dbx "github.com/go-ozzo/ozzo-dbx"
+	"github.com/go-ozzo/ozzo-routing"
 	"github.com/go-ozzo/ozzo-routing/auth"
 	"github.com/go-ozzo/ozzo-routing/content"
 	"github.com/go-ozzo/ozzo-routing/cors"
