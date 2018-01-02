@@ -33,7 +33,6 @@ func main() {
 		}
 		log.Printf("Pew pew - raygun tracing is enabled")
 		defer raygun.HandleError()
-		panic("foo")
 	}
 
 	if err := app.LoadConfig("./config"); err != nil {
