@@ -1,10 +1,12 @@
 hash: 6b479016449cf8d7184a43ef4ad09703d8f61283f2037dca69ddc1ed1a01da68
-updated: 2018-01-03T10:31:49.568359+11:00
+updated: 2018-01-03T10:42:50.513911+11:00
 imports:
 - name: github.com/dgrijalva/jwt-go
   version: dbeaa9332f19a944acb5736b4456cfcc02140e29
 - name: github.com/fsnotify/fsnotify
   version: f12c6236fe7b5cf6bcf30e5935d08cb079d78334
+- name: github.com/go-errors/errors
+  version: 3afebba5a48dbc89b574d890b6b34d9ee10b4785
 - name: github.com/go-ozzo/ozzo-dbx
   version: 4a691af007e34d2fde28c5b3f8792ef7fdcd30f9
 - name: github.com/go-ozzo/ozzo-routing
@@ -34,6 +36,8 @@ imports:
   - json/parser
   - json/scanner
   - json/token
+- name: github.com/kaeuferportal/stack2struct
+  version: 6838fbadc9188e5d5778b0c708da95d90653bda0
 - name: github.com/lib/pq
   version: 83612a56d3dd153a94a629cd64925371c9adad78
   subpackages:
@@ -44,6 +48,8 @@ imports:
   version: 79e884e233d62b1d6260cec2cf51a0b8c6e81087
 - name: github.com/mitchellh/mapstructure
   version: ca63d7c062ee3c9f34db231e352b60012b4fd0c1
+- name: github.com/pborman/uuid
+  version: e533369306653d193b93dae055f6083cbf8ba54f
 - name: github.com/pelletier/go-buffruneio
   version: df1e16fde7fc330a0ca68167c23bf7ed6ac31d6d
 - name: github.com/pelletier/go-toml
