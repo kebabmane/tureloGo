@@ -70,5 +70,12 @@ func LoadConfig(configPaths ...string) error {
 		v.SetDefault("server_port", os.Getenv("PORT"))
 	}
 
+	if os.Getenv("DATABASE_URL") == "" {
+		log.Printf("$DATABASE_URL not set, setting from config")
+	} else {
+		log.Printf("Setting DSN via env")
+		v.SetDefault("dsn", os.Getenv("DATABASE_URL"))
+	}
+
 	return Config.Validate()
 }
