@@ -41,7 +41,6 @@ func (config appConfig) Validate() error {
 func LoadConfig(configPaths ...string) error {
 	v := viper.New()
 	v.SetConfigType("yaml")
-	v.AutomaticEnv()
 	for _, path := range configPaths {
 		v.AddConfigPath(path)
 	}
