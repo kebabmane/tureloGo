@@ -53,16 +53,6 @@ func LoadConfig(configPaths ...string) error {
 		log.Printf("Running in development mode")
 	}
 
-	v.SetDefault("error_file", "config/errors.yaml")
-
-	if err := v.ReadInConfig(); err != nil {
-		return fmt.Errorf("Failed to read the configuration file: %s", err)
-	}
-
-	if err := v.Unmarshal(&Config); err != nil {
-		return err
-	}
-
 	if os.Getenv("PORT") == "" {
 		log.Printf("$PORT not set, setting from config")
 	} else {
@@ -77,6 +67,16 @@ func LoadConfig(configPaths ...string) error {
 		log.Printf("Setting DSN via env")
 		log.Printf("DATABASE_URL from env: ", os.Getenv("DATABASE_URL"))
 		v.SetDefault("dsn", os.Getenv("DATABASE_URL"))
+	}
+
+	v.SetDefault("error_file", "config/errors.yaml")
+
+	if err := v.ReadInConfig(); err != nil {
+		return fmt.Errorf("Failed to read the configuration file: %s", err)
+	}
+
+	if err := v.Unmarshal(&Config); err != nil {
+		return err
 	}
 
 	log.Printf("Port to be used: ", v.GetString("server_port"))
