@@ -21,11 +21,16 @@ import (
 )
 
 func main() {
-	// load application configurations
+	// load application configurations in not production
 
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
+	if os.Getenv("ENV") == "PRODUCTION" {
+		fmt.Println("your running in production, did you know that?")
+	} else {
+		fmt.Println("your running in dev/test, did you know that?")
+		err := godotenv.Load()
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		}
 	}
 
 	if os.Getenv("RAYGUN_APIKEY") == "" {
