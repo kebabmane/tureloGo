@@ -8,7 +8,7 @@ import (
 // FetchAll is the model function which interfaces with the DB and returns a []byte of the category in json format.
 func FetchAll() ([]byte, error) {
 
-	var categories []categoryModel
+	var categories []Category
 
 	db.Find(&categories)
 
@@ -20,7 +20,6 @@ func FetchAll() ([]byte, error) {
 	}
 
 	js, err := json.Marshal(categories)
-
 	{
 		return js, err
 	}
@@ -29,7 +28,7 @@ func FetchAll() ([]byte, error) {
 // Create creates a new category item and returns the []byte json object and an error.
 func Create(b []byte) ([]byte, error) {
 
-	var category categoryModel
+	var category Category
 
 	err := json.Unmarshal(b, &category)
 
@@ -45,7 +44,7 @@ func Create(b []byte) ([]byte, error) {
 // FetchSingle gets a single todo based on param passed, returning []byte and error
 func FetchSingle(id string) ([]byte, error) {
 
-	var category categoryModel
+	var category Category
 	db.First(&category, id)
 
 	if category.ID == 0 {
@@ -64,7 +63,7 @@ func FetchSingle(id string) ([]byte, error) {
 // Update is the model function for PUT
 func Update(b []byte, id string) ([]byte, error) {
 
-	var category, updatedCategory categoryModel
+	var category, updatedCategory Category
 	db.First(&category, id)
 
 	if category.ID == 0 {
@@ -80,7 +79,7 @@ func Update(b []byte, id string) ([]byte, error) {
 	db.Model(&category).Update("category_name", updatedCategory.CategoryName)
 	db.Model(&category).Update("category_image_url", updatedCategory.CategoryImageURL)
 	db.Model(&category).Update("category_description", updatedCategory.CategoryDescription)
-	db.Model(&category).Update("feeds_count", updatedCategory.FeedsCount)		
+	db.Model(&category).Update("feeds_count", updatedCategory.FeedsCount)
 
 	js, err := json.Marshal(&category)
 	if err != nil {
@@ -93,7 +92,7 @@ func Update(b []byte, id string) ([]byte, error) {
 // Delete deletes the categoryo from the database
 func Delete(id string) ([]byte, error) {
 
-	var category categoryModel
+	var category Category
 	db.First(&category, id)
 
 	if category.ID == 0 {

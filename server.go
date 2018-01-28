@@ -15,6 +15,7 @@ import (
 	"github.com/kebabmane/tureloGo/app"
 	"github.com/kebabmane/tureloGo/controller"
 	"github.com/kebabmane/tureloGo/middlewares"
+	"github.com/kebabmane/tureloGo/model"
 	_ "github.com/lib/pq"
 	"github.com/rs/cors"
 )
@@ -37,6 +38,9 @@ func main() {
 		log.Printf("Pew pew - raygun tracing is enabled")
 		defer raygun.HandleError()
 	}
+
+	// migrate the database
+	model.Init()
 
 	// create the logger
 	logger := logrus.New()

@@ -2,10 +2,11 @@ package controller
 
 import (
 	"bytes"
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/kebabmane/tureloGo/models"
+	"github.com/kebabmane/tureloGo/model"
 )
 
 // FetchAllCategories fetches from model and returns json
@@ -15,6 +16,7 @@ func FetchAllCategories(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
+	fmt.Println("this is the error:", err)
 	if err != nil {
 		if err.Error() == "Not found" {
 			w.WriteHeader(http.StatusNotFound)
@@ -24,7 +26,6 @@ func FetchAllCategories(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("Something went wrong"))
 		}
 	}
-
 	w.WriteHeader(http.StatusOK)
 	w.Write(js)
 }
