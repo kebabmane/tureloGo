@@ -91,7 +91,7 @@ func main() {
 	n.UseHandler(muxRouter)
 
 	// start the server
-	address := fmt.Sprintf(":%v", os.Getenv("SERVER_PORT"))
+	address := fmt.Sprintf(":%v", os.Getenv("PORT"))
 	logger.Infof("server %v is started at %v\n", app.Version, address)
 	panic(http.ListenAndServe(address, handlers.RecoveryHandler()(n)))
 
