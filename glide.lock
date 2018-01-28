@@ -1,30 +1,30 @@
-hash: 6b479016449cf8d7184a43ef4ad09703d8f61283f2037dca69ddc1ed1a01da68
-updated: 2018-01-03T10:42:50.513911+11:00
+hash: 36337c1dfdf7cc5c1e96965f214d6a4925da11ec6d067f1a405b3c6c269b21d9
+updated: 2018-01-28T19:19:51.443324+11:00
 imports:
-- name: github.com/dgrijalva/jwt-go
-  version: dbeaa9332f19a944acb5736b4456cfcc02140e29
+- name: github.com/auth0-community/auth0
+  version: 9ebd072c579e8060c6d60690e9dffd3b79718992
+- name: github.com/auth0/go-jwt-middleware
+  version: 5493cabe49f7bfa6e2ec444a09d334d90cd4e2bd
+- name: github.com/codegangsta/negroni
+  version: 5dbbc83f748fc3ad38585842b0aedab546d0ea1e
 - name: github.com/fsnotify/fsnotify
   version: f12c6236fe7b5cf6bcf30e5935d08cb079d78334
 - name: github.com/go-errors/errors
   version: 3afebba5a48dbc89b574d890b6b34d9ee10b4785
-- name: github.com/go-ozzo/ozzo-dbx
-  version: 4a691af007e34d2fde28c5b3f8792ef7fdcd30f9
 - name: github.com/go-ozzo/ozzo-routing
   version: bd886380e6a7fe8d842c68b595fadae2dcc3bee8
-  subpackages:
-  - access
-  - auth
-  - content
-  - cors
-  - fault
 - name: github.com/go-ozzo/ozzo-validation
   version: 85dcd8368eba387e65a03488b003e233994e87e9
-- name: github.com/golang/gddo
-  version: 293f5da99ebf75dfe83bdc40605c1dca64a484a9
-  subpackages:
-  - httputil/header
+- name: github.com/gorilla/context
+  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
+- name: github.com/gorilla/handlers
+  version: 90663712d74cb411cbef281bc1e08c19d1a76145
 - name: github.com/gorilla/mux
   version: 2d5fef06b891c971b14aa6f71ca5ab6c03a36e0e
+- name: github.com/gorilla/securecookie
+  version: e59506cc896acb7f7bf732d4fdf5e25f7ccd8983
+- name: github.com/gorilla/sessions
+  version: ca9ada44574153444b00d3fd9c8559e4cc95f896
 - name: github.com/hashicorp/hcl
   version: 68e816d1c783414e79bc65b3994d9ab6b0a722ab
   subpackages:
@@ -36,11 +36,20 @@ imports:
   - json/parser
   - json/scanner
   - json/token
+- name: github.com/jinzhu/gorm
+  version: 5174cc5c242a728b435ea2be8a2f7f998e15429b
+  subpackages:
+  - dialects/postgres
+- name: github.com/jinzhu/inflection
+  version: 1c35d901db3da928c72a72d8458480cc9ade058f
+- name: github.com/joho/godotenv
+  version: a79fa1e548e2c689c241d10173efd51e5d689d5b
 - name: github.com/kaeuferportal/stack2struct
   version: 6838fbadc9188e5d5778b0c708da95d90653bda0
 - name: github.com/lib/pq
   version: 83612a56d3dd153a94a629cd64925371c9adad78
   subpackages:
+  - hstore
   - oid
 - name: github.com/magiconair/properties
   version: 61b492c03cf472e0c6419be5899b8e0dc28b1b88
@@ -54,6 +63,8 @@ imports:
   version: df1e16fde7fc330a0ca68167c23bf7ed6ac31d6d
 - name: github.com/pelletier/go-toml
   version: 5a62685873ef617233ab5f1b825a6e4a758e16cf
+- name: github.com/rs/cors
+  version: 7af7a1e09ba336d2ea14b1ce73bf693c6837dbf6
 - name: github.com/Sirupsen/logrus
   version: 4b6ea7319e214d98c938f12692336f7ca9348d6b
 - name: github.com/spf13/afero
@@ -68,6 +79,13 @@ imports:
   version: 103ce5cd2042f2fe629c1957abb64ab3e7f50235
 - name: github.com/spf13/viper
   version: 7fb2782df3d83e0036cc89f461ed0422628776f4
+- name: golang.org/x/crypto
+  version: 351dc6a5bf92a5f2ae22fadeee08eb6a45aa2d93
+  subpackages:
+  - ed25519
+  - ed25519/internal/edwards25519
+- name: golang.org/x/oauth2
+  version: a032972e28060ca4f5644acffae3dfc268cc09db
 - name: golang.org/x/sys
   version: a646d33e2ee3172a661fc09bca23bb4889a41bc8
   subpackages:
@@ -75,9 +93,7 @@ imports:
 - name: golang.org/x/text
   version: 1cbadb444a806fd9430d14ad08967ed91da4fa0a
   subpackages:
-  - secure/bidirule
   - transform
-  - unicode/bidi
   - unicode/norm
 - name: gopkg.in/mgo.v2
   version: 3f83fa5005286a7fe593b055f0d7771a7dce4655
@@ -86,6 +102,12 @@ imports:
   - internal/json
   - internal/sasl
   - internal/scram
+- name: gopkg.in/square/go-jose.v2
+  version: f8f38de21b4dcd69d0413faf231983f5fd6634b1
+  subpackages:
+  - cipher
+  - json
+  - jwt
 - name: gopkg.in/yaml.v2
   version: e4d366fc3c7938e2958e662b4258c7a89e1f0e3e
 testImports: []

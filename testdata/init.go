@@ -6,7 +6,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/go-ozzo/ozzo-dbx"
 	"github.com/kebabmane/tureloGo/app"
 	_ "github.com/lib/pq" // initialize posgresql for test
 )
@@ -21,7 +20,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	DB, err = dbx.MustOpen("postgres", app.Config.DSN)
+	DB, err = dbx.MustOpen("postgres", os.Getenv("DSN"))
 	if err != nil {
 		panic(err)
 	}

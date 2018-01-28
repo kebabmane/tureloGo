@@ -8,21 +8,24 @@ import (
 
 	"github.com/MindscapeHQ/raygun4go"
 	"github.com/Sirupsen/logrus"
-	dbx "github.com/go-ozzo/ozzo-dbx"
-	"github.com/go-ozzo/ozzo-routing"
-	"github.com/go-ozzo/ozzo-routing/auth"
-	"github.com/go-ozzo/ozzo-routing/content"
-	"github.com/go-ozzo/ozzo-routing/cors"
-	"github.com/kebabmane/tureloGo/apis"
+	"github.com/codegangsta/negroni"
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 	"github.com/kebabmane/tureloGo/app"
-	"github.com/kebabmane/tureloGo/daos"
-	"github.com/kebabmane/tureloGo/errors"
-	"github.com/kebabmane/tureloGo/services"
+	"github.com/kebabmane/tureloGo/controller"
+	"github.com/kebabmane/tureloGo/middlewares"
 	_ "github.com/lib/pq"
+	"github.com/rs/cors"
 )
 
 func main() {
 	// load application configurations
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 
 	if os.Getenv("RAYGUN_APIKEY") == "" {
 		log.Printf("No Raygun API KEY found, no app tracing")
@@ -35,71 +38,58 @@ func main() {
 		defer raygun.HandleError()
 	}
 
-	if err := app.LoadConfig("./config"); err != nil {
-		panic(fmt.Errorf("Invalid application configuration: %s", err))
-	}
-
-	// load error messages
-	if err := errors.LoadMessages(app.Config.ErrorFile); err != nil {
-		panic(fmt.Errorf("Failed to read the error message file: %s", err))
-	}
-
 	// create the logger
 	logger := logrus.New()
 
-	// connect to the database
-	db, err := dbx.MustOpen("postgres", app.Config.DSN)
-	if err != nil {
-		panic(fmt.Errorf("Database connection error: ", err))
-	}
-	db.LogFunc = logger.Infof
-
-	// wire up API routing
-	http.Handle("/", buildRouter(logger, db))
-
-	// start the server
-	address := fmt.Sprintf(":%v", app.Config.ServerPort)
-	logger.Infof("server %v is started at %v\n", app.Version, address)
-	panic(http.ListenAndServe(address, nil))
-}
-
-func buildRouter(logger *logrus.Logger, db *dbx.DB) *routing.Router {
-	router := routing.New()
-
-	router.To("GET,HEAD", "/ping", func(c *routing.Context) error {
-		c.Abort() // skip all other middlewares/handlers
-		return c.Write("OK " + app.Version)
+	// CORS middleware setup
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowedHeaders:   []string{"Accept-Encoding", "Accept-Language", "Authorization"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "OPTIONS", "DELETE"},
+		AllowCredentials: true,
 	})
 
-	router.Use(
-		app.Init(logger),
-		content.TypeNegotiator(content.JSON),
-		cors.Handler(cors.Options{
-			AllowOrigins: "*",
-			AllowHeaders: "*",
-			AllowMethods: "*",
-		}),
-		app.Transactional(db),
-	)
+	// set up router
+	r := mux.NewRouter().StrictSlash(true)
+	r.HandleFunc("/", homeHandler)
 
-	rg := router.Group("/v1")
+	r.HandleFunc("/health", controller.HealthFunction).Methods("GET")
 
-	rg.Post("/auth", apis.Auth(app.Config.JWTSigningKey))
-	rg.Use(auth.JWT(app.Config.JWTVerificationKey, auth.JWTOptions{
-		SigningMethod: app.Config.JWTSigningMethod,
-		TokenHandler:  apis.JWTHandler,
-	}))
+	// s is a subrouter to handle question routes
+	api := r.PathPrefix("/api").Subrouter()
 
-	// wire up API resources and services + dao's here
+	// questions routes
+	api.HandleFunc("/categories/", controller.FetchAllCategories).Methods("GET")
+	api.HandleFunc("/categories/", controller.CreateCategory).Methods("POST")
+	api.HandleFunc("/categories/{id}", controller.FetchSingleCategory).Methods("GET")
+	api.HandleFunc("/categories/{id}", controller.UpdateCategory).Methods("PUT")
 
-	feedDAO := daos.NewFeedDAO()
-	apis.ServeFeedResource(rg, services.NewFeedService(feedDAO))
+	// muxRouter uses Negroni handles the middleware for authorization
+	muxRouter := http.NewServeMux()
+	muxRouter.Handle("/", r)
+	muxRouter.Handle("/api/", negroni.New(
+		negroni.HandlerFunc(middlewares.CheckJWT()),
+		negroni.Wrap(api),
+	))
 
-	categoryDAO := daos.NewCategoryDAO()
-	apis.ServeCategoryResource(rg, services.NewCategoryService(categoryDAO))
+	// Negroni handles the middleware chaining with next
+	n := negroni.Classic()
 
-	feedEntryDAO := daos.NewFeedEntryDAO()
-	apis.ServeFeedEntryResource(rg, services.NewFeedEntryService(feedEntryDAO))
+	// Use CORS
+	n.Use(c)
 
-	return router
+	// handle routes with the muxRouter
+	n.UseHandler(muxRouter)
+
+	// start the server
+	address := fmt.Sprintf(":%v", os.Getenv("SERVER_PORT"))
+	logger.Infof("server %v is started at %v\n", app.Version, address)
+	panic(http.ListenAndServe(address, handlers.RecoveryHandler()(n)))
+
+}
+
+func homeHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("{\"message\": \"Hello world\"}"))
 }
