@@ -22,6 +22,8 @@ type Category struct {
 // Seeding tables:
 var categories []Category = []Category{
 	Category{CategoryName: "technology", CategoryImageURL: "http://s3.com", CategoryDescription: "this is where we put some technology stuff"},
+	Category{CategoryName: "health", CategoryImageURL: "http://s3.com", CategoryDescription: "this is where we put some health stuff"},
+	Category{CategoryName: "medical", CategoryImageURL: "http://s3.com", CategoryDescription: "this is where we put some medical stuff"},
 }
 
 // Init migrates the database, in the future add a feature flag to know when to migrate
@@ -38,6 +40,9 @@ func Init() {
 
 	db.AutoMigrate(&Category{})
 	fmt.Println("We have migrated the database")
+
+	db.Unscoped().Delete(&categories)
+	fmt.Println("We have reset the database")
 
 	for _, category := range categories {
 		db.Create(&category)
