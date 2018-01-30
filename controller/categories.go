@@ -12,7 +12,7 @@ import (
 // FetchAllCategories fetches from model and returns json
 func FetchAllCategories(w http.ResponseWriter, r *http.Request) {
 
-	js, err := model.FetchAll()
+	js, err := model.FetchAllCategories()
 
 	w.Header().Set("Content-Type", "application/json")
 
@@ -30,14 +30,14 @@ func FetchAllCategories(w http.ResponseWriter, r *http.Request) {
 	w.Write(js)
 }
 
-// CreateTodo takes request body and sends it to model, sending back success message or error on response
+// CreateCategory takes request body and sends it to model, sending back success message or error on response
 func CreateCategory(w http.ResponseWriter, r *http.Request) {
 	// read stuff from the request
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(r.Body)
 	b := []byte(buf.String())
 
-	js, err := model.Create(b)
+	js, err := model.CreateCategory(b)
 
 	if err != nil {
 		if err.Error() == "Not found" {
@@ -56,15 +56,15 @@ func CreateCategory(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Todo successfully created!"))
 }
 
-// FetchSingleTodo takes URL param and passes to model,
+// FetchSingleCategory takes URL param and passes to model,
 func FetchSingleCategory(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	js, err := model.FetchSingle(id)
+	js, err := model.FetchSingleCategory(id)
 
 	if err != nil {
-		panic("Unable to convert todo to JSON format")
+		panic("Unable to convert category to JSON format")
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -72,7 +72,7 @@ func FetchSingleCategory(w http.ResponseWriter, r *http.Request) {
 	w.Write(js)
 }
 
-// UpdateTodo modifies the content of Todo based on url param and body content.
+// UpdateCategory modifies the content of Todo based on url param and body content.
 func UpdateCategory(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
@@ -81,7 +81,7 @@ func UpdateCategory(w http.ResponseWriter, r *http.Request) {
 	buf.ReadFrom(r.Body)
 	b := []byte(buf.String())
 
-	js, err := model.Update(b, id)
+	js, err := model.UpdateCategory(b, id)
 
 	w.Header().Set("Content-Type", "application/json")
 
@@ -102,20 +102,20 @@ func UpdateCategory(w http.ResponseWriter, r *http.Request) {
 	w.Write(js)
 }
 
-// DeleteTodo deletes a todo
+// DeleteCategory deletes a category
 func DeleteCategory(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	js, err := model.Delete(id)
+	js, err := model.DeleteCategory(id)
 
 	w.Header().Set("Content-Type", "application/json")
 
 	if err != nil {
 		if err.Error() == "Not found" {
 			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte("Todo not found"))
-		} else if err.Error() == "Unable to marshal todo into json" {
+			w.Write([]byte("Category not found"))
+		} else if err.Error() == "Unable to marshal category into json" {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("Something went wrong."))
 		}

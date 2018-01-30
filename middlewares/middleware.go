@@ -12,6 +12,8 @@ import (
 	"gopkg.in/square/go-jose.v2/jwt"
 )
 
+var emailToProfileIDCache map[string]int64
+
 // CheckJWT does the auth0 dance
 func CheckJWT() negroni.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {

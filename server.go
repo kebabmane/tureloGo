@@ -65,13 +65,17 @@ func main() {
 	r.HandleFunc("/health", controller.HealthFunction).Methods("GET")
 
 	// s is a subrouter to handle question routes
-	api := r.PathPrefix("/api").Subrouter()
+	api := r.PathPrefix("/v1").Subrouter()
 
 	// questions routes
 	api.HandleFunc("/categories/", controller.FetchAllCategories).Methods("GET")
 	api.HandleFunc("/categories/", controller.CreateCategory).Methods("POST")
 	api.HandleFunc("/categories/{id}", controller.FetchSingleCategory).Methods("GET")
 	api.HandleFunc("/categories/{id}", controller.UpdateCategory).Methods("PUT")
+	api.HandleFunc("/feeds", controller.FetchAllFeeds).Methods("GET")
+	api.HandleFunc("/feeds/", controller.CreateFeed).Methods("POST")
+	api.HandleFunc("/feed/{id}", controller.FetchSingleFeed).Methods("GET")
+	api.HandleFunc("/feed/{id}", controller.UpdateFeed).Methods("PUT")
 
 	// muxRouter uses Negroni handles the middleware for authorization
 	muxRouter := http.NewServeMux()

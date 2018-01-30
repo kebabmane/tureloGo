@@ -6,7 +6,7 @@ import (
 )
 
 // FetchAll is the model function which interfaces with the DB and returns a []byte of the category in json format.
-func FetchAll() ([]byte, error) {
+func FetchAllCategories() ([]byte, error) {
 
 	var categories []Category
 
@@ -26,7 +26,7 @@ func FetchAll() ([]byte, error) {
 }
 
 // Create creates a new category item and returns the []byte json object and an error.
-func Create(b []byte) ([]byte, error) {
+func CreateCategory(b []byte) ([]byte, error) {
 
 	var category Category
 
@@ -42,7 +42,7 @@ func Create(b []byte) ([]byte, error) {
 }
 
 // FetchSingle gets a single todo based on param passed, returning []byte and error
-func FetchSingle(id string) ([]byte, error) {
+func FetchSingleCategory(id string) ([]byte, error) {
 
 	var category Category
 	db.First(&category, id)
@@ -61,7 +61,7 @@ func FetchSingle(id string) ([]byte, error) {
 }
 
 // Update is the model function for PUT
-func Update(b []byte, id string) ([]byte, error) {
+func UpdateCategory(b []byte, id string) ([]byte, error) {
 
 	var category, updatedCategory Category
 	db.First(&category, id)
@@ -90,7 +90,7 @@ func Update(b []byte, id string) ([]byte, error) {
 }
 
 // Delete deletes the categoryo from the database
-func Delete(id string) ([]byte, error) {
+func DeleteCategory(id string) ([]byte, error) {
 
 	var category Category
 	db.First(&category, id)

@@ -45,19 +45,20 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/pborman/uuid"
 	goerrors "github.com/go-errors/errors"
 	"github.com/kaeuferportal/stack2struct"
+	"github.com/pborman/uuid"
 )
 
 // Client is the struct holding your Raygun configuration and context
 // information that is needed if an error occurs.
 type Client struct {
-	appName     string             // the name of the app
-	apiKey      string             // the api key for your raygun app
-	context     contextInformation // optional context information
-	silent      bool               // if true, the error is printed instead of sent to Raygun
-	logToStdOut bool
+	appName      string             // the name of the app
+	apiKey       string             // the api key for your raygun app
+	context      contextInformation // optional context information
+	silent       bool               // if true, the error is printed instead of sent to Raygun
+	logToStdOut  bool               // if true, the client will print debug messages
+	asynchronous bool               // if true, reports are sent to Raygun from a new go routine
 }
 
 // contextInformation holds optional information on the context the error
@@ -88,8 +89,29 @@ func New(appName, apiKey string) (c *Client, err error) {
 	if appName == "" || apiKey == "" {
 		return nil, errors.New("appName and apiKey are required")
 	}
-	c = &Client{appName, apiKey, context, false, false}
+	c = &Client{appName, apiKey, context, false, false, false}
 	return c, nil
+}
+
+func (c *Client) Clone() *Client {
+	contextInfoClone := contextInformation{
+		Request: c.context.Request,
+		Version: c.context.Version,
+		Tags: c.context.Tags,
+		CustomData: c.context.CustomData,
+		User: c.context.User,
+		identifier: c.context.identifier,
+	}
+
+	clientClone := &Client{
+		appName: c.appName,
+		apiKey: c.apiKey,
+		context: contextInfoClone,
+		silent: c.silent,
+		logToStdOut: c.logToStdOut,
+		asynchronous: c.asynchronous,
+	}
+	return clientClone
 }
 
 // Silent sets the silent-property on the Client. If true, errors will not be
@@ -104,6 +126,13 @@ func (c *Client) Silent(s bool) *Client {
 // any errors that occur when submiting to raygun to std out
 func (c *Client) LogToStdOut(l bool) *Client {
 	c.logToStdOut = l
+	return c
+}
+
+// Sets whether or not this client submits reports to Raygun asynchronously.
+// The default is false.
+func (c *Client) Asynchronous(a bool) *Client {
+	c.asynchronous = a
 	return c
 }
 
@@ -181,7 +210,7 @@ func (c *Client) createPost(err error, stack stackTrace) postData {
 func (c *Client) CreateError(message string) error {
 	err := errors.New(message)
 	post := c.createPost(err, currentStack())
-	
+
 	return c.submit(post)
 }
 
@@ -191,14 +220,14 @@ func (c *Client) CreateError(message string) error {
 func (c *Client) SendError(error error) error {
 	err := errors.New(error.Error())
 
-  var st stackTrace = nil
-  if goerror, ok := error.(*goerrors.Error); ok {
-	  st = make(stackTrace, 0, 0)
-	  stack2struct.Parse(goerror.Stack(), &st)
-  } else {
-  	st = currentStack()
-  }
-	
+	var st stackTrace = nil
+	if goerror, ok := error.(*goerrors.Error); ok {
+		st = make(stackTrace, 0, 0)
+		stack2struct.Parse(goerror.Stack(), &st)
+	} else {
+		st = currentStack()
+	}
+
 	post := c.createPost(err, st)
 	return c.submit(post)
 }
@@ -212,6 +241,15 @@ func (c *Client) submit(post postData) error {
 		return nil
 	}
 
+  if c.asynchronous {
+  	go c.submitCore(post)
+  	return nil
+  }
+  
+  return c.submitCore(post)
+}
+
+func (c *Client) submitCore(post postData) error {
 	json, err := json.Marshal(post)
 	if err != nil {
 		errMsg := fmt.Sprintf("Unable to convert to JSON (%s): %#v", err.Error(), post)
@@ -226,6 +264,11 @@ func (c *Client) submit(post postData) error {
 	r.Header.Add("X-ApiKey", c.apiKey)
 	httpClient := http.Client{}
 	resp, err := httpClient.Do(r)
+
+	if err != nil {
+		errMsg := fmt.Sprintf("Failed to request (%s)", err.Error())
+		return errors.New(errMsg)
+	}
 
 	defer resp.Body.Close()
 	if resp.StatusCode == 202 {

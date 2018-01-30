@@ -11,12 +11,27 @@ import (
 // declare DB
 var db *gorm.DB
 
+// Category data model
 type Category struct {
 	gorm.Model
 	CategoryName        string
 	CategoryImageURL    string
 	CategoryDescription string
 	FeedsCount          string
+	CategoryID          uint
+}
+
+// Feed data model
+type Feed struct {
+	gorm.Model
+	FeedName        string
+	FeedURL         string
+	FeedIcon        string
+	FeedsCount      string
+	LastFeteched    string
+	FeedDescription string
+	FeedImageURL    string
+	Categories      []Category
 }
 
 // Seeding tables:
