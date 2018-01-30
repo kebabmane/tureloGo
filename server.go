@@ -67,11 +67,13 @@ func main() {
 	// s is a subrouter to handle question routes
 	api := r.PathPrefix("/v1").Subrouter()
 
-	// questions routes
+	// categories routes
 	api.HandleFunc("/categories/", controller.FetchAllCategories).Methods("GET")
 	api.HandleFunc("/categories/", controller.CreateCategory).Methods("POST")
 	api.HandleFunc("/categories/{id}", controller.FetchSingleCategory).Methods("GET")
 	api.HandleFunc("/categories/{id}", controller.UpdateCategory).Methods("PUT")
+
+	// feed routes
 	api.HandleFunc("/feeds", controller.FetchAllFeeds).Methods("GET")
 	api.HandleFunc("/feeds/", controller.CreateFeed).Methods("POST")
 	api.HandleFunc("/feed/{id}", controller.FetchSingleFeed).Methods("GET")
