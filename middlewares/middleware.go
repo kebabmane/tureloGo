@@ -17,7 +17,6 @@ var emailToProfileIDCache map[string]int64
 // CheckJWT does the auth0 dance
 func CheckJWT() negroni.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		fmt.Println("AUTH0_DOMAIN: ", os.Getenv("AUTH0_DOMAIN"))
 		jwksURI := "https://" + os.Getenv("AUTH0_DOMAIN") + "/.well-known/jwks.json"
 		client := auth0.NewJWKClient(auth0.JWKClientOptions{URI: jwksURI})
 		aud := "https://" + os.Getenv("AUTH0_AUDIENCE")

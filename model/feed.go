@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 )
 
 // FetchAllFeeds is the model function which interfaces with the DB and returns a []byte of the category in json format.
@@ -51,6 +52,8 @@ func FetchSingleFeed(id string) ([]byte, error) {
 		err := errors.New("Not found")
 		return []byte("feed not found"), err
 	}
+
+	fmt.Println("this is the feed: ", feed)
 
 	js, err := json.Marshal(feed)
 	if err != nil {

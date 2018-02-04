@@ -53,7 +53,7 @@ func CreateCategory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Todo successfully created!"))
+	w.Write([]byte("Category successfully created!"))
 }
 
 // FetchSingleCategory takes URL param and passes to model,

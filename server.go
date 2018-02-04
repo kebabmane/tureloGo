@@ -17,7 +17,9 @@ import (
 	"github.com/kebabmane/tureloGo/middlewares"
 	"github.com/kebabmane/tureloGo/model"
 	_ "github.com/lib/pq"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/cors"
+	"github.com/zbindenren/negroni-prometheus"
 )
 
 func main() {
@@ -53,7 +55,7 @@ func main() {
 	// CORS middleware setup
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
-		AllowedHeaders:   []string{"Accept-Encoding", "Accept-Language", "Authorization"},
+		AllowedHeaders:   []string{"Access-Control-Allow-Origin", "Content-Type", "Origin", "Accept-Encoding", "Accept-Language", "Authorization"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "OPTIONS", "DELETE"},
 		AllowCredentials: true,
 	})
@@ -63,6 +65,8 @@ func main() {
 	r.HandleFunc("/", homeHandler)
 
 	r.HandleFunc("/health", controller.HealthFunction).Methods("GET")
+
+	r.Handle("/metrics", prometheus.Handler())
 
 	// s is a subrouter to handle question routes
 	api := r.PathPrefix("/v1").Subrouter()
@@ -76,8 +80,8 @@ func main() {
 	// feed routes
 	api.HandleFunc("/feeds", controller.FetchAllFeeds).Methods("GET")
 	api.HandleFunc("/feeds/", controller.CreateFeed).Methods("POST")
-	api.HandleFunc("/feed/{id}", controller.FetchSingleFeed).Methods("GET")
-	api.HandleFunc("/feed/{id}", controller.UpdateFeed).Methods("PUT")
+	api.HandleFunc("/feeds/{id}", controller.FetchSingleFeed).Methods("GET")
+	api.HandleFunc("/feeds/{id}", controller.UpdateFeed).Methods("PUT")
 
 	// muxRouter uses Negroni handles the middleware for authorization
 	muxRouter := http.NewServeMux()
@@ -89,6 +93,11 @@ func main() {
 
 	// Negroni handles the middleware chaining with next
 	n := negroni.Classic()
+
+	m := negroniprometheus.NewMiddleware("tureloGo")
+
+	// Use promethus for service stuff
+	n.Use(m)
 
 	// Use CORS
 	n.Use(c)
