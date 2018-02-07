@@ -33,6 +33,20 @@ type Feed struct {
 	FeedImageURL    string
 	FeedLastUpdated time.Time
 	Categories      []Category
+	FeedEntry       []FeedEntry
+}
+
+// FeedEntry data model
+type FeedEntry struct {
+	gorm.Model
+	FeedEntryTitle            string `gorm:"unique_index"`
+	FeedEntryURL              string
+	FeedEntryPublished        string
+	FeedEntryAuthor           string
+	FeedEntryContent          string
+	FeedEntryContentSanitized string
+	FeedEntryLink             string
+	FeedID                    uint
 }
 
 // Seeding tables:
@@ -60,6 +74,7 @@ func Init() {
 
 	db.AutoMigrate(&Category{})
 	db.AutoMigrate(&Feed{})
+	db.AutoMigrate(&FeedEntry{})
 	fmt.Println("We have migrated the database")
 
 	db.Unscoped().Delete(&categories)

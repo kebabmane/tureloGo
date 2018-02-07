@@ -83,6 +83,12 @@ func main() {
 	api.HandleFunc("/feeds/{id}", controller.FetchSingleFeed).Methods("GET")
 	api.HandleFunc("/feeds/{id}", controller.UpdateFeed).Methods("PUT")
 
+	// feedEntry routes
+	api.HandleFunc("/feedEntries", controller.FetchAllFeedEntries).Methods("GET")
+	api.HandleFunc("/feedEntries/", controller.CreateFeedEntry).Methods("POST")
+	api.HandleFunc("/feedEntries/{id}", controller.FetchSingleFeedEntry).Methods("GET")
+	api.HandleFunc("/feedEntries/{id}", controller.UpdateFeedEntry).Methods("PUT")
+
 	// muxRouter uses Negroni handles the middleware for authorization
 	muxRouter := http.NewServeMux()
 	muxRouter.Handle("/", r)

@@ -70,8 +70,16 @@ func CrawlFeed(f Feed, ch chan<- string) {
 	}
 
 	for _, i := range feed.Items {
-		fmt.Printf("storing item: %s", i.Link)
-		fmt.Printf("the item: ", i)
+		var feedEntry model.FeedEntry
+		feedEntry.FeedEntryTitle = i.Title
+		feedEntry.FeedEntryAuthor = i.Author.Name
+		feedEntry.FeedEntryPublished = i.Published
+		feedEntry.FeedEntryLink = i.Link
+		feedEntry.FeedEntryContent = i.Content
+		feedEntry.FeedID = f.ID
+		fmt.Println("this feedEntry: ", feedEntry)
+		b, _ := json.Marshal(feedEntry)
+		model.CreateFeedEntry(b)
 	}
 	ch <- "successfully crawled " + f.FeedURL + "\n"
 }
