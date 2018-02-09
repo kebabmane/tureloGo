@@ -60,6 +60,10 @@ var feeds []Feed = []Feed{
 	Feed{FeedName: "The Verge -  All Posts", FeedURL: "http://theverge.com/rss/index.xml", FeedDescription: "this is where we put some technology stuff", FeedIcon: "https://cdn.vox-cdn.com/community_logos/52801/VER_Logomark_32x32..png"},
 }
 
+var feedEntries []FeedEntry = []FeedEntry{
+	FeedEntry{FeedEntryTitle: "Meow"},
+}
+
 // Init migrates the database, in the future add a feature flag to know when to migrate
 func Init() {
 
@@ -79,6 +83,7 @@ func Init() {
 
 	db.Unscoped().Delete(&categories)
 	db.Unscoped().Delete(&feeds)
+	db.Unscoped().Delete(&feedEntries)
 	fmt.Println("We have reset the database")
 
 	for _, category := range categories {
@@ -87,5 +92,8 @@ func Init() {
 	for _, feed := range feeds {
 		db.Create(&feed)
 	}
-	fmt.Println("We have seeded the database with feeds & categories")
+	for _, feedEntry := range feedEntries {
+		db.Create(&feedEntry)
+	}
+	fmt.Println("We have seeded the database with feeds, feedEntries & categories")
 }

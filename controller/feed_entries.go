@@ -11,8 +11,10 @@ import (
 
 // FetchAllFeedEntries fetches from model and returns json
 func FetchAllFeedEntries(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
 
-	js, err := model.FetchAllFeedEntries()
+	js, err := model.FetchAllFeedEntries(id)
 
 	w.Header().Set("Content-Type", "application/json")
 

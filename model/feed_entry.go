@@ -6,11 +6,11 @@ import (
 )
 
 // FetchAllFeedEntries is the model function which interfaces with the DB and returns a []byte of the category in json format.
-func FetchAllFeedEntries() ([]byte, error) {
+func FetchAllFeedEntries(id string) ([]byte, error) {
 
 	var feedEntries []FeedEntry
 
-	db.Find(&feedEntries)
+	db.Where("feed_id = ?", id).Find(&feedEntries)
 
 	if len(feedEntries) <= 0 {
 		err := errors.New("Not found")
