@@ -61,10 +61,6 @@
   version = "1.0.0"
 
 [[constraint]]
-  name = "github.com/joho/godotenv"
-  version = "1.2.0"
-
-[[constraint]]
   name = "github.com/rs/cors"
   version = "1.2.0"
 
@@ -75,3 +71,7 @@
 [prune]
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/lestrrat/go-jwx"

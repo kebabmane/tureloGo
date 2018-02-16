@@ -1,11 +1,13 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"github.com/kebabmane/tureloGo/config"
 )
 
 // declare DB
@@ -60,18 +62,24 @@ var feeds []Feed = []Feed{
 	Feed{FeedName: "The Verge -  All Posts", FeedURL: "http://theverge.com/rss/index.xml", FeedDescription: "this is where we put some technology stuff", FeedIcon: "https://cdn.vox-cdn.com/community_logos/52801/VER_Logomark_32x32..png"},
 }
 
-var feedEntries []FeedEntry = []FeedEntry{
-	FeedEntry{FeedEntryTitle: "Meow"},
-}
+// ErrorBadRequest is the bad request string
+var ErrorBadRequest = errors.New("Bad request")
+
+// ErrorInternalServer is the internal server error
+var ErrorInternalServer = errors.New("Something went wrong")
+
+// ErrorForbidden is the forbidden error
+var ErrorForbidden = errors.New("Forbidden")
+
+// ErrorNotFound is the not found error
+var ErrorNotFound = errors.New("Not found")
 
 // Init migrates the database, in the future add a feature flag to know when to migrate
 func Init() {
 
-	dbString := "postgres://postgres:postgres@127.0.0.1:5432/turelogo?sslmode=disable"
-
-	fmt.Println("Is this your DB string: ", dbString)
+	c := config.GetConfig()
 	var err error
-	db, err = gorm.Open("postgres", dbString)
+	db, err = gorm.Open("postgres", c.GetString("database.databaseURL"))
 	if err != nil {
 		panic("Unable to connect to DB")
 	}
@@ -83,7 +91,6 @@ func Init() {
 
 	db.Unscoped().Delete(&categories)
 	db.Unscoped().Delete(&feeds)
-	db.Unscoped().Delete(&feedEntries)
 	fmt.Println("We have reset the database")
 
 	for _, category := range categories {
@@ -91,9 +98,6 @@ func Init() {
 	}
 	for _, feed := range feeds {
 		db.Create(&feed)
-	}
-	for _, feedEntry := range feedEntries {
-		db.Create(&feedEntry)
 	}
 	fmt.Println("We have seeded the database with feeds, feedEntries & categories")
 }

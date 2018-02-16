@@ -2,7 +2,6 @@ package controller
 
 import (
 	"bytes"
-	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -16,7 +15,6 @@ func FetchAllCategories(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	fmt.Println("this is the error:", err)
 	if err != nil {
 		if err.Error() == "Not found" {
 			w.WriteHeader(http.StatusNotFound)
