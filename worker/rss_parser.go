@@ -2,13 +2,16 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"github.com/kebabmane/tureloGo/config"
 	"github.com/kebabmane/tureloGo/model"
 	"github.com/mmcdole/gofeed"
 )
@@ -44,7 +47,7 @@ func Crawl() {
 	json.Unmarshal(feeds, &feed)
 
 	for _, f := range feed {
-		go CrawlFeed(f, ch)
+		go crawlFeed(f, ch)
 	}
 
 	for i := 0; i < len(feeds); i++ {
@@ -53,7 +56,7 @@ func Crawl() {
 }
 
 // CrawlFeed allows you to crawl feeds
-func CrawlFeed(f Feed, ch chan<- string) {
+func crawlFeed(f Feed, ch chan<- string) {
 	c := &http.Client{
 		// give up after 5 seconds
 		Timeout: 5 * time.Second,
@@ -85,6 +88,16 @@ func CrawlFeed(f Feed, ch chan<- string) {
 }
 
 func main() {
+	// setup the environment vars
+	enviroment := flag.String("e", "development", "")
+	flag.Usage = func() {
+		fmt.Println("Usage: server -e {mode}")
+		os.Exit(1)
+	}
+
+	flag.Parse()
+	config.Init(*enviroment)
+
 	model.Init()
 	Crawl()
 }

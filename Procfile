@@ -1,1 +1,1 @@
-web: ENV=PRODUCTION tureloGo
+web: tureloGo -e development

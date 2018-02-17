@@ -1,16 +1,16 @@
 package middlewares
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
-	"os"
+	"strings"
 
 	"github.com/auth0-community/auth0"
 	"github.com/codegangsta/negroni"
-	"github.com/dgrijalva/jwt-go"
-	"github.com/lestrrat/go-jwx/jwk"
+	raven "github.com/getsentry/raven-go"
+	"github.com/kebabmane/tureloGo/config"
 	jose "gopkg.in/square/go-jose.v2"
+	"gopkg.in/square/go-jose.v2/jwt"
 )
 
 var emailToProfileIDCache map[string]int64
@@ -18,14 +18,15 @@ var emailToProfileIDCache map[string]int64
 // CheckJWT does the auth0 dance
 func CheckJWT() negroni.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		fmt.Println("your in CheckJET()", r)
+		// get environment config
+		config := config.GetConfig()
 
-		jwksURI := os.Getenv("WELL-KNOWN-URL")
+		jwksURI := "https://" + config.GetString("auth0.domain") + "/.well-known/jwks.json"
 		client := auth0.NewJWKClient(auth0.JWKClientOptions{URI: jwksURI})
-		aud := os.Getenv("AUTH0_AUDIENCE")
+		aud := config.GetString("auth0.audience")
 		audience := []string{aud}
 
-		auth0ApiIssuer := "https://" + os.Getenv("AUTH0_DOMAIN") + "/"
+		auth0ApiIssuer := "https://" + config.GetString("auth0.domain") + "/"
 		configuration := auth0.NewConfiguration(client, audience, auth0ApiIssuer, jose.RS256)
 		validator := auth0.NewValidator(configuration)
 
@@ -33,6 +34,7 @@ func CheckJWT() negroni.HandlerFunc {
 
 		if err != nil {
 			fmt.Println(err)
+			raven.CaptureErrorAndWait(err, nil)
 			fmt.Println("Token is not valid:", token)
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte("Unauthorized"))
@@ -43,23 +45,18 @@ func CheckJWT() negroni.HandlerFunc {
 	}
 }
 
-func getCognitoJwk(token *jwt.Token) (interface{}, error) {
+func checkScope(r *http.Request, validator *auth0.JWTValidator, token *jwt.JSONWebToken) bool {
+	claims := map[string]interface{}{}
+	err := validator.Claims(r, token, &claims)
 
-	// TODO: cache response so we don't have to make a request every time
-	// we want to verify a JWT
-	set, err := jwk.FetchHTTP(os.Getenv("WELL-KNOWN-URL"))
 	if err != nil {
-		return nil, err
+		fmt.Println(err)
+		return false
 	}
 
-	keyID, ok := token.Header["kid"].(string)
-	if !ok {
-		return nil, errors.New("expecting JWT header to have string kid")
+	if claims["scope"] != nil && strings.Contains(claims["scope"].(string), "read:messages") {
+		return true
+	} else {
+		return false
 	}
-
-	if key := set.LookupKeyID(keyID); len(key) == 1 {
-		return key[0].Materialize()
-	}
-
-	return nil, errors.New("unable to find key")
 }

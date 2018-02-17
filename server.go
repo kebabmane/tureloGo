@@ -11,6 +11,7 @@ import (
 	"github.com/alexedwards/scs/engine/memstore"
 	"github.com/alexedwards/scs/session"
 	"github.com/codegangsta/negroni"
+	raven "github.com/getsentry/raven-go"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/kebabmane/tureloGo/app"
@@ -44,6 +45,9 @@ func main() {
 
 	// create the logger
 	logger := logrus.New()
+
+	// setup raven/sentry for error logging
+	raven.SetDSN(config.GetString("sentry.raven"))
 
 	// setup session store
 	engine := memstore.New(30 * time.Minute)
@@ -106,7 +110,7 @@ func main() {
 	n.UseHandler(muxRouter)
 
 	// start the server
-	address := fmt.Sprintf(":%v", os.Getenv("PORT"))
+	address := fmt.Sprintf(":%v", config.GetString("server.port"))
 	logger.Infof("server %v is started at %v\n", app.Version, config.GetString("server.port"))
 	panic(http.ListenAndServe(address, handlers.RecoveryHandler()(sessionManager(n))))
 

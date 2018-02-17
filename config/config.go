@@ -19,6 +19,7 @@ func Init(env string) {
 	if env == "db_seed" {
 		v.AddConfigPath("../config/")
 	}
+
 	if env == "test" {
 		v.AddConfigPath("../config/")
 	} else {

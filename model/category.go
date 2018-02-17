@@ -3,6 +3,8 @@ package model
 import (
 	"encoding/json"
 	"errors"
+
+	raven "github.com/getsentry/raven-go"
 )
 
 // FetchAll is the model function which interfaces with the DB and returns a []byte of the category in json format.
@@ -33,6 +35,7 @@ func CreateCategory(b []byte) ([]byte, error) {
 	err := json.Unmarshal(b, &category)
 
 	if err != nil {
+		raven.CaptureErrorAndWait(err, nil)
 		return []byte("Something went wrong"), err
 	}
 
@@ -54,6 +57,7 @@ func FetchSingleCategory(id string) ([]byte, error) {
 
 	js, err := json.Marshal(category)
 	if err != nil {
+		raven.CaptureErrorAndWait(err, nil)
 		js = []byte("Unable to convert category to JSON format")
 	}
 
@@ -73,6 +77,7 @@ func UpdateCategory(b []byte, id string) ([]byte, error) {
 
 	err := json.Unmarshal(b, &updatedCategory)
 	if err != nil {
+		raven.CaptureErrorAndWait(err, nil)
 		return []byte("Malformed input"), err
 	}
 
@@ -83,6 +88,7 @@ func UpdateCategory(b []byte, id string) ([]byte, error) {
 
 	js, err := json.Marshal(&category)
 	if err != nil {
+		raven.CaptureErrorAndWait(err, nil)
 		return []byte("Unable to marshal json"), err
 	}
 
@@ -105,6 +111,7 @@ func DeleteCategory(id string) ([]byte, error) {
 
 	js, err := json.Marshal(&category)
 	if err != nil {
+		raven.CaptureErrorAndWait(err, nil)
 		panic("Unable to marshal category into json")
 	}
 

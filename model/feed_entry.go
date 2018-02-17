@@ -3,6 +3,8 @@ package model
 import (
 	"encoding/json"
 	"errors"
+
+	raven "github.com/getsentry/raven-go"
 )
 
 // FetchAllFeedEntries is the model function which interfaces with the DB and returns a []byte of the category in json format.
@@ -33,6 +35,7 @@ func CreateFeedEntry(b []byte) ([]byte, error) {
 	err := json.Unmarshal(b, &feedEntry)
 
 	if err != nil {
+		raven.CaptureErrorAndWait(err, nil)
 		return []byte("Something went wrong"), err
 	}
 
@@ -54,6 +57,7 @@ func FetchSingleFeedEntry(id string) ([]byte, error) {
 
 	js, err := json.Marshal(feedEntry)
 	if err != nil {
+		raven.CaptureErrorAndWait(err, nil)
 		js = []byte("Unable to convert feedEntry to JSON format")
 	}
 
@@ -73,11 +77,13 @@ func UpdateFeedEntry(b []byte, id string) ([]byte, error) {
 
 	err := json.Unmarshal(b, &updatedFeedEntry)
 	if err != nil {
+		raven.CaptureErrorAndWait(err, nil)
 		return []byte("Malformed input"), err
 	}
 
 	js, err := json.Marshal(&feedEntry)
 	if err != nil {
+		raven.CaptureErrorAndWait(err, nil)
 		return []byte("Unable to marshal json"), err
 	}
 
@@ -100,6 +106,7 @@ func DeleteFeedEntry(id string) ([]byte, error) {
 
 	js, err := json.Marshal(&feedEntry)
 	if err != nil {
+		raven.CaptureErrorAndWait(err, nil)
 		panic("Unable to marshal feed into json")
 	}
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	raven "github.com/getsentry/raven-go"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/kebabmane/tureloGo/config"
@@ -79,8 +80,10 @@ func Init() {
 
 	c := config.GetConfig()
 	var err error
+
 	db, err = gorm.Open("postgres", c.GetString("database.databaseURL"))
 	if err != nil {
+		raven.CaptureErrorAndWait(err, nil)
 		panic("Unable to connect to DB")
 	}
 
