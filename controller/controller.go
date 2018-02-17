@@ -27,7 +27,6 @@ func handleErrorAndRespond(js []byte, err error, w http.ResponseWriter) {
 
 		// in any case, send back the message created in the model
 		w.Write(js)
-		return
 	}
 
 	// Handle the success case

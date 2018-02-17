@@ -1,8 +1,8 @@
 package main
 
 import (
-	"flag"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -14,8 +14,8 @@ import (
 	raven "github.com/getsentry/raven-go"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 	"github.com/kebabmane/tureloGo/app"
-	"github.com/kebabmane/tureloGo/config"
 	"github.com/kebabmane/tureloGo/controller"
 	"github.com/kebabmane/tureloGo/middlewares"
 	"github.com/kebabmane/tureloGo/model"
@@ -27,18 +27,15 @@ import (
 
 func main() {
 	// load application configurations in not production
-
-	enviroment := flag.String("e", "development", "")
-	flag.Usage = func() {
-		fmt.Println("Usage: server -e {mode}")
-		os.Exit(1)
+	if os.Getenv("ENV") == "PRODUCTION" {
+		fmt.Println("your running in production, did you know that?")
+	} else {
+		fmt.Println("your running in dev/test, did you know that?")
+		err := godotenv.Load()
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		}
 	}
-
-	flag.Parse()
-	config.Init(*enviroment)
-
-	// get environment config
-	config := config.GetConfig()
 
 	// migrate the database
 	model.Init()
@@ -47,7 +44,7 @@ func main() {
 	logger := logrus.New()
 
 	// setup raven/sentry for error logging
-	raven.SetDSN(config.GetString("sentry.raven"))
+	raven.SetDSN(os.Getenv("SENTRY_API"))
 
 	// setup session store
 	engine := memstore.New(30 * time.Minute)
@@ -63,7 +60,6 @@ func main() {
 
 	// set up router
 	r := mux.NewRouter().StrictSlash(true)
-	r.HandleFunc("/", homeHandler)
 
 	r.HandleFunc("/health", controller.HealthFunction).Methods("GET")
 
@@ -98,7 +94,7 @@ func main() {
 	// Negroni handles the middleware chaining with next
 	n := negroni.Classic()
 
-	m := negroniprometheus.NewMiddleware(config.GetString("health.name"))
+	m := negroniprometheus.NewMiddleware(os.Getenv("HEALTH_NAME"))
 
 	// Use promethus for service stuff
 	n.Use(m)
@@ -110,14 +106,8 @@ func main() {
 	n.UseHandler(muxRouter)
 
 	// start the server
-	address := fmt.Sprintf(":%v", config.GetString("server.port"))
-	logger.Infof("server %v is started at %v\n", app.Version, config.GetString("server.port"))
+	address := fmt.Sprintf(":%v", os.Getenv("PORT"))
+	logger.Infof("server %v is started at %v\n", app.Version, address)
 	panic(http.ListenAndServe(address, handlers.RecoveryHandler()(sessionManager(n))))
 
-}
-
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("{\"message\": \"Hello world\"}"))
 }

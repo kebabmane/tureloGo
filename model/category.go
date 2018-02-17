@@ -7,7 +7,7 @@ import (
 	raven "github.com/getsentry/raven-go"
 )
 
-// FetchAll is the model function which interfaces with the DB and returns a []byte of the category in json format.
+// FetchAllCategories is the model function which interfaces with the DB and returns a []byte of the category in json format.
 func FetchAllCategories() ([]byte, error) {
 
 	var categories []Category
@@ -27,7 +27,7 @@ func FetchAllCategories() ([]byte, error) {
 	}
 }
 
-// Create creates a new category item and returns the []byte json object and an error.
+// CreateCategory Create creates a new category item and returns the []byte json object and an error.
 func CreateCategory(b []byte) ([]byte, error) {
 
 	var category Category
@@ -44,7 +44,7 @@ func CreateCategory(b []byte) ([]byte, error) {
 	return []byte("Category successfully created"), nil
 }
 
-// FetchSingle gets a single todo based on param passed, returning []byte and error
+// FetchSingleCategory gets a single todo based on param passed, returning []byte and error
 func FetchSingleCategory(id string) ([]byte, error) {
 
 	var category Category
@@ -64,7 +64,7 @@ func FetchSingleCategory(id string) ([]byte, error) {
 	return js, err
 }
 
-// Update is the model function for PUT
+// UpdateCategory is the model function for PUT
 func UpdateCategory(b []byte, id string) ([]byte, error) {
 
 	var category, updatedCategory Category
@@ -95,7 +95,7 @@ func UpdateCategory(b []byte, id string) ([]byte, error) {
 	return js, nil
 }
 
-// Delete deletes the categoryo from the database
+// DeleteCategory deletes the categoryo from the database
 func DeleteCategory(id string) ([]byte, error) {
 
 	var category Category

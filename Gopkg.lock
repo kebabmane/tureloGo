@@ -138,6 +138,12 @@
   revision = "1c35d901db3da928c72a72d8458480cc9ade058f"
 
 [[projects]]
+  name = "github.com/joho/godotenv"
+  packages = ["."]
+  revision = "a79fa1e548e2c689c241d10173efd51e5d689d5b"
+  version = "v1.2.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/lib/pq"
   packages = [
@@ -232,7 +238,7 @@
     "nfs",
     "xfs"
   ]
-  revision = "cb4147076ac75738c9a7d279075a253c0cc5acbd"
+  revision = "282c8707aa210456a825798969cc27edda34992a"
 
 [[projects]]
   name = "github.com/rs/cors"
@@ -292,7 +298,7 @@
     "ed25519",
     "ed25519/internal/edwards25519"
   ]
-  revision = "d9133f5469342136e669e85192a26056b587f503"
+  revision = "650f4a345ab4e5b245a3034b110ebc7299e68186"
 
 [[projects]]
   branch = "master"
@@ -302,7 +308,7 @@
     "html/atom",
     "html/charset"
   ]
-  revision = "2fb46b16b8dda405028c50f7c7f0f9dd1fa6bfb1"
+  revision = "136a25c244d3019482a795d728110278d6ba09a4"
 
 [[projects]]
   branch = "master"
@@ -335,7 +341,7 @@
     "unicode/cldr",
     "unicode/norm"
   ]
-  revision = "e19ae1496984b1c655b8044a65c0300a3c878dd3"
+  revision = "4e4a3210bb54bb31f6ab2cdca2edcc0b50c420c1"
 
 [[projects]]
   name = "gopkg.in/square/go-jose.v2"
@@ -357,6 +363,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c33ee4a07ac04e8e0b99d66207c932ccf57a4f74224683b2ea17b7ef172a8370"
+  inputs-digest = "cd3cb6f4613956b7963c50eb250eb436ce35009e7cf69962085354c71d3481cd"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,7 +10,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"github.com/kebabmane/tureloGo/config"
+	"github.com/joho/godotenv"
 	"github.com/kebabmane/tureloGo/model"
 	"github.com/mmcdole/gofeed"
 )
@@ -88,15 +87,16 @@ func crawlFeed(f Feed, ch chan<- string) {
 }
 
 func main() {
-	// setup the environment vars
-	enviroment := flag.String("e", "development", "")
-	flag.Usage = func() {
-		fmt.Println("Usage: server -e {mode}")
-		os.Exit(1)
+	// load application configurations in not production
+	if os.Getenv("ENV") == "PRODUCTION" {
+		fmt.Println("your running in production, did you know that?")
+	} else {
+		fmt.Println("your running in dev/test, did you know that?")
+		err := godotenv.Load()
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		}
 	}
-
-	flag.Parse()
-	config.Init(*enviroment)
 
 	model.Init()
 	Crawl()

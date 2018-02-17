@@ -3,12 +3,13 @@ package model
 import (
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	raven "github.com/getsentry/raven-go"
 	"github.com/jinzhu/gorm"
+	// required for GORM compatability
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"github.com/kebabmane/tureloGo/config"
 )
 
 // declare DB
@@ -78,10 +79,9 @@ var ErrorNotFound = errors.New("Not found")
 // Init migrates the database, in the future add a feature flag to know when to migrate
 func Init() {
 
-	c := config.GetConfig()
 	var err error
 
-	db, err = gorm.Open("postgres", c.GetString("database.databaseURL"))
+	db, err = gorm.Open("postgres", os.Getenv("DATABASE_URL"))
 	if err != nil {
 		raven.CaptureErrorAndWait(err, nil)
 		panic("Unable to connect to DB")
