@@ -1,17 +1,32 @@
-FROM golang:1.9 AS builder
+# start a golang base image, version 1.8
+FROM golang:latest as builder
 
-# Download and install the latest release of dep
-ADD https://github.com/golang/dep/releases/download/v0.4.1/dep-linux-amd64 /usr/bin/dep
-RUN chmod +x /usr/bin/dep
 
-# Copy the code from the host and compile it
-WORKDIR $GOPATH/src/github.com/kebabmane/tureloGo
-COPY Gopkg.toml Gopkg.lock ./
-RUN dep ensure --vendor-only
-COPY . ./
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix nocgo -o /app .
+ENV SRC=/go/src
+RUN mkdir -p /go/src/
+WORKDIR /go/src/tureloGo
 
-FROM scratch
-COPY --from=builder /app ./
-ENTRYPOINT ["./app"]
+RUN git clone https://github.com/kebabmane/tureloGo.git /go/src/tureloGo
 
+# Go dep!
+RUN go get -u github.com/golang/dep/...
+RUN dep ensure
+
+#disable crosscompiling 
+ENV CGO_ENABLED=0
+
+#compile linux only
+ENV GOOS=linux
+
+#build the binary with debug information removed
+RUN go build  -ldflags '-w -s' -a -installsuffix cgo -o tureloGo
+
+
+# Now use an alpine image for running the app
+FROM alpine:latest  
+RUN apk --no-cache add ca-certificates
+
+WORKDIR /root/
+COPY --from=builder /go/src/tureloGo/tureloGo .
+ENV ENV DEVELOPMENT
+CMD ["./tureloGo"]
