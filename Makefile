@@ -15,7 +15,7 @@ setup:
 
 # Install from source.
 install:
-	@echo "==> Installing up ${GOPATH}/bin/lfs-profile-golang"
+	@echo "==> Installing up ${GOPATH}/bin/tureloGo"
 	@$(GO) install ./...
 .PHONY: install
 

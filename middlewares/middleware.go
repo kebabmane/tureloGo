@@ -1,60 +1,73 @@
 package middlewares
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
-	"os"
 	"strings"
 
-	"github.com/auth0-community/auth0"
-	"github.com/codegangsta/negroni"
-	raven "github.com/getsentry/raven-go"
-	jose "gopkg.in/square/go-jose.v2"
-	"gopkg.in/square/go-jose.v2/jwt"
-)
+	log "github.com/sirupsen/logrus"
 
-var emailToProfileIDCache map[string]int64
+	"github.com/codegangsta/negroni"
+	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/mendsley/gojwk"
+)
 
 // CheckJWT does the auth0 dance
 func CheckJWT() negroni.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		jwksURI := "https://" + os.Getenv("AUTH0_DOMAIN") + "/.well-known/jwks.json"
-		client := auth0.NewJWKClient(auth0.JWKClientOptions{URI: jwksURI})
-		aud := os.Getenv("AUTH0_AUDIENCE")
-		audience := []string{aud}
-
-		auth0ApiIssuer := "https://" + os.Getenv("AUTH0_DOMAIN") + "/"
-		configuration := auth0.NewConfiguration(client, audience, auth0ApiIssuer, jose.RS256)
-		validator := auth0.NewValidator(configuration)
-
-		token, err := validator.ValidateRequest(r)
-
+		myToken := strings.Replace(r.Header.Get("Authorization"), "Bearer ", "", 1)
+		log.Println("the token:", myToken)
+		token, err := jwt.Parse(myToken, func(token *jwt.Token) (interface{}, error) {
+			// Don't forget to validate the alg is what you expect:
+			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+			}
+			return myLookupKey(token.Header["kid"].(string))
+		})
 		if err != nil {
-			fmt.Println(err)
-			raven.CaptureErrorAndWait(err, nil)
-			fmt.Println("Token is not valid:", token)
+			log.Println(err)
+			log.Println("Token is not valid:", token)
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte("Unauthorized"))
 		} else {
 			// if the err isnt caught then token must be good so let them pass
-			fmt.Println("Token is valid, you shall pass!")
+			log.Println("Token is valid, you shall pass!")
 			next.ServeHTTP(w, r)
 		}
 	}
 }
 
-func checkScope(r *http.Request, validator *auth0.JWTValidator, token *jwt.JSONWebToken) bool {
-	claims := map[string]interface{}{}
-	err := validator.Claims(r, token, &claims)
+func myLookupKey(kid string) (interface{}, error) {
+	log.Printf("Kid : %v\n", kid)
+	var v map[string]interface{}
+	parseJSONFromURL("https://apac-syd-partner01-test.apigee.net/.well-known/openid-configuration", &v)
+	var keys struct{ Keys []gojwk.Key }
+	parseJSONFromURL(v["jwks_uri"].(string), &keys)
+	for _, key := range keys.Keys {
+		if key.Kid == kid {
+			return key.DecodePublicKey()
+		}
+	}
+	return nil, fmt.Errorf("Key not found")
+}
 
+func parseJSONFromURL(url string, v interface{}) {
+	resp, err := http.Get(url)
 	if err != nil {
-		fmt.Println(err)
-		return false
-	}
-
-	if claims["scope"] != nil && strings.Contains(claims["scope"].(string), "read:messages") {
-		return true
+		log.Printf("%s", err)
 	} else {
-		return false
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Printf("%s", err)
+		}
+		json.Unmarshal(body, v)
 	}
+}
+
+func checkUserID(userID int) bool {
+	// Check your database to make sure the provided ID is valid.
+	return true // or false
 }

@@ -1,6 +1,12 @@
 package app
 
-// Version specifies the current version of the application.
-// The value of this variable is replaced with the latest git tag
-// by "make" while building or running the application.
-var Version = "1.0"
+var (
+	// Branch is set by makefile
+	Branch = "unknown"
+	// BuildDate is set by makefile
+	BuildDate = "unknown"
+	// Commit is set by makefile
+	Commit = "unknown"
+	// Version is set by makefile
+	Version = "unknown"
+)

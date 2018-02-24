@@ -2,7 +2,11 @@ package controller
 
 import (
 	"net/http"
+
+	log "github.com/sirupsen/logrus"
 )
+
+var err error
 
 func handleErrorAndRespond(js []byte, err error, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
@@ -26,10 +30,17 @@ func handleErrorAndRespond(js []byte, err error, w http.ResponseWriter) {
 		}
 
 		// in any case, send back the message created in the model
-		w.Write(js)
+		_, err = w.Write(js)
+		if err != nil {
+			log.Println("an error happened whilst handling an error")
+		}
+		return
 	}
 
 	// Handle the success case
 	w.WriteHeader(http.StatusOK)
-	w.Write(js)
+	_, err = w.Write(js)
+	if err != nil {
+		log.Println("an error happened whilst handling an error")
+	}
 }

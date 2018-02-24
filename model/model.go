@@ -3,7 +3,6 @@ package model
 import (
 	"errors"
 	"fmt"
-	"os"
 	"time"
 
 	raven "github.com/getsentry/raven-go"
@@ -77,11 +76,11 @@ var ErrorForbidden = errors.New("Forbidden")
 var ErrorNotFound = errors.New("Not found")
 
 // Init migrates the database, in the future add a feature flag to know when to migrate
-func Init() {
+func Init(dbURL string) {
 
 	var err error
 
-	db, err = gorm.Open("postgres", os.Getenv("DATABASE_URL"))
+	db, err = gorm.Open("postgres", dbURL)
 	if err != nil {
 		raven.CaptureErrorAndWait(err, nil)
 		panic("Unable to connect to DB")

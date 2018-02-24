@@ -98,6 +98,6 @@ func main() {
 		}
 	}
 
-	model.Init()
+	//model.Init()
 	Crawl()
 }
