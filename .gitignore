@@ -18,6 +18,7 @@
 *.env
 */vendor
 config/*.yaml
+push.sh
 
 
 # End of https://www.gitignore.io/api/go

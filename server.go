@@ -10,11 +10,12 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/kebabmane/tureloGo/app"
+	"github.com/kebabmane/tureloGo/db"
 	"github.com/kebabmane/tureloGo/healthz"
 	"github.com/kebabmane/tureloGo/middlewares"
-	"github.com/kebabmane/tureloGo/model"
 	"github.com/kebabmane/tureloGo/router"
 	_ "github.com/lib/pq"
+	"github.com/rs/cors"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/negroni"
 )
@@ -28,6 +29,7 @@ type Config struct {
 	NegroniLoggerName string `env:"NEGRONI_LOGGER_NAME"`
 	VerboseLogging    bool   `env:"VERBOSE_LOGGING,required"`
 	DatabaseURL       string `env:"DATABASE_URL"`
+	DatabaseEndpoint  string `env:"DATABASE_ENDPOINT"`
 }
 
 func main() {
@@ -48,8 +50,6 @@ func main() {
 	// log all the config vars that have been discovered
 	log.Printf("%+v\n", cfg)
 
-	// loglevel := log.InfoLevel
-
 	if cfg.VerboseLogging {
 		log.SetLevel(log.DebugLevel)
 	}
@@ -61,7 +61,7 @@ func main() {
 	healthz.SetupHealthChecks()
 
 	// migrate and setup the database object
-	model.Init(cfg.DatabaseURL)
+	db.Init(cfg.AwsRegion, cfg.DatabaseEndpoint)
 
 	// set up router
 	r := mux.NewRouter()
@@ -84,10 +84,13 @@ func main() {
 	v1apis := v1.PathPrefix("/v1").Subrouter()
 	router.RegisterHandlers(v1apis)
 
+	// setup default CORS config
+	handler := cors.Default().Handler(r)
+
 	// start the server
 	address := fmt.Sprintf(":%v", cfg.Port)
 	log.Infof("server %v is started at %v\n", app.Version, address)
-	panic(http.ListenAndServe(address, handlers.RecoveryHandler()(r)))
+	panic(http.ListenAndServe(address, handlers.RecoveryHandler()(handler)))
 
 }
 

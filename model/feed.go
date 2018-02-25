@@ -11,7 +11,10 @@ func FetchAllFeeds() ([]byte, error) {
 
 	var feeds []Feed
 
-	db.Find(&feeds)
+	table := getFeedsTableName()
+	feedTable := db.Table(table)
+
+	err := feedTable.Scan().All(&feeds)
 
 	if len(feeds) <= 0 {
 		err := errors.New("Not found")
@@ -33,11 +36,14 @@ func CreateFeed(b []byte) ([]byte, error) {
 
 	err := json.Unmarshal(b, &feed)
 
+	table := getFeedsTableName()
+	feedTable := db.Table(table)
+
+	err = feedTable.Put(&feed).Run()
+
 	if err != nil {
 		return []byte("Something went wrong"), err
 	}
-
-	db.Save(&feed)
 
 	return []byte("Feed successfully created"), nil
 }
@@ -46,9 +52,13 @@ func CreateFeed(b []byte) ([]byte, error) {
 func FetchSingleFeed(id string) ([]byte, error) {
 
 	var feed Feed
-	db.First(&feed, id)
 
-	if feed.ID == 0 {
+	table := getFeedsTableName()
+	feedTable := db.Table(table)
+
+	err := feedTable.Get("FeedID", id).One(&feed)
+
+	if feed.FeedID == 0 {
 		err := errors.New("Not found")
 		return []byte("feed not found"), err
 	}

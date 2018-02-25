@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	raven "github.com/getsentry/raven-go"
+	log "github.com/sirupsen/logrus"
 )
 
 // FetchAllCategories is the model function which interfaces with the DB and returns a []byte of the category in json format.
@@ -12,7 +12,14 @@ func FetchAllCategories() ([]byte, error) {
 
 	var categories []Category
 
-	db.Find(&categories)
+	table := getCategoriesTableName()
+	categoryTable := db.Table(table)
+
+	err := categoryTable.Scan().All(&categories)
+
+	if err != nil {
+		log.Println("%+v\n", err)
+	}
 
 	if len(categories) <= 0 {
 		err := errors.New("Not found")
@@ -34,12 +41,15 @@ func CreateCategory(b []byte) ([]byte, error) {
 
 	err := json.Unmarshal(b, &category)
 
+	table := getCategoriesTableName()
+	categoryTable := db.Table(table)
+
+	err = categoryTable.Put(&category).Run()
+
 	if err != nil {
-		raven.CaptureErrorAndWait(err, nil)
+		log.Println("%+v\n", err)
 		return []byte("Something went wrong"), err
 	}
-
-	db.Save(&category)
 
 	return []byte("Category successfully created"), nil
 }
@@ -47,17 +57,21 @@ func CreateCategory(b []byte) ([]byte, error) {
 // FetchSingleCategory gets a single todo based on param passed, returning []byte and error
 func FetchSingleCategory(id string) ([]byte, error) {
 
-	var category Category
-	db.First(&category, id)
+	table := getCategoriesTableName()
+	categoryTable := db.Table(table)
 
-	if category.ID == 0 {
+	var category Category
+
+	err := categoryTable.Get("CategoryID", id).One(&category)
+
+	if category.CategoryID == 0 {
 		err := errors.New("Not found")
 		return []byte("category not found"), err
 	}
 
 	js, err := json.Marshal(category)
 	if err != nil {
-		raven.CaptureErrorAndWait(err, nil)
+		log.Println("%+v\n", err)
 		js = []byte("Unable to convert category to JSON format")
 	}
 
@@ -67,28 +81,33 @@ func FetchSingleCategory(id string) ([]byte, error) {
 // UpdateCategory is the model function for PUT
 func UpdateCategory(b []byte, id string) ([]byte, error) {
 
-	var category, updatedCategory Category
-	db.First(&category, id)
+	table := getCategoriesTableName()
+	categoryTable := db.Table(table)
 
-	if category.ID == 0 {
+	var category, updatedCategory Category
+
+	if category.CategoryID == 0 {
 		err := errors.New("Not found")
 		return []byte("category not found"), err
 	}
 
 	err := json.Unmarshal(b, &updatedCategory)
 	if err != nil {
-		raven.CaptureErrorAndWait(err, nil)
+		log.Println("%+v\n", err)
 		return []byte("Malformed input"), err
 	}
 
-	db.Model(&category).Update("category_name", updatedCategory.CategoryName)
-	db.Model(&category).Update("category_image_url", updatedCategory.CategoryImageURL)
-	db.Model(&category).Update("category_description", updatedCategory.CategoryDescription)
-	db.Model(&category).Update("feeds_count", updatedCategory.FeedsCount)
+	categoryTable.Update("category_name", updatedCategory.CategoryName)
+	categoryTable.Update("category_image_url", updatedCategory.CategoryImageURL)
+	categoryTable.Update("category_description", updatedCategory.CategoryDescription)
+	categoryTable.Update("feeds_count", updatedCategory.FeedsCount)
+
+	// get the current category
+	err = categoryTable.Get("CategoryID", id).One(&category)
 
 	js, err := json.Marshal(&category)
 	if err != nil {
-		raven.CaptureErrorAndWait(err, nil)
+		log.Println("%+v\n", err)
 		return []byte("Unable to marshal json"), err
 	}
 
@@ -98,22 +117,22 @@ func UpdateCategory(b []byte, id string) ([]byte, error) {
 // DeleteCategory deletes the categoryo from the database
 func DeleteCategory(id string) ([]byte, error) {
 
+	table := getCategoriesTableName()
+	categoryTable := db.Table(table)
+
 	var category Category
-	db.First(&category, id)
+	err := categoryTable.Get("CategoryID", id).One(&category)
 
-	if category.ID == 0 {
-		// w.WriteHeader(http.StatusNotFound)
-		// w.Write([]byte("Todo not found"))
-		// return
+	if category.CategoryID == 0 {
+		err := errors.New("Not found")
+		return []byte("category not found"), err
 	}
 
-	db.Delete(&category)
+	err = categoryTable.Delete("CategoryID", id).Run()
 
-	js, err := json.Marshal(&category)
 	if err != nil {
-		raven.CaptureErrorAndWait(err, nil)
-		panic("Unable to marshal category into json")
+		log.Println("%+v\n", err)
 	}
 
-	return js, nil
+	return []byte("category deleted"), err
 }

@@ -2,38 +2,37 @@ package model
 
 import (
 	"errors"
-	"fmt"
+	"os"
 	"time"
 
-	raven "github.com/getsentry/raven-go"
-	"github.com/jinzhu/gorm"
-	// required for GORM compatability
-	_ "github.com/jinzhu/gorm/dialects/postgres"
+	log "github.com/sirupsen/logrus"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/guregu/dynamo"
 )
 
 // declare DB
-var db *gorm.DB
+var db *dynamo.DB
 
 // Category data model
 type Category struct {
-	gorm.Model
-	CategoryName        string `gorm:"unique_index"`
-	CategoryImageURL    string
-	CategoryDescription string
-	FeedsCount          string
-	CategoryID          uint
+	CategoryName        string `dynamo:"CategoryName"`
+	CategoryImageURL    string `dynamo:"DatabaseImageURL"`
+	CategoryDescription string `dynamo:"CategoryDescription"`
+	FeedsCount          string `dynamo:"FeedsCount"`
+	CategoryID          uint   // Hash key
 }
 
 // Feed data model
 type Feed struct {
-	gorm.Model
-	FeedName        string `gorm:"unique_index"`
-	FeedURL         string
-	FeedIcon        string
-	FeedsCount      string
-	LastFeteched    string
-	FeedDescription string
-	FeedImageURL    string
+	FeedID          uint
+	FeedName        string `dynamo:"FeedName"`
+	FeedURL         string `dynamo:"FeedURL"`
+	FeedIcon        string `dynamo:"FeedIcon"`
+	FeedsCount      string `dynamo:"FeedsCount"`
+	LastFeteched    string `dynamo:"LastFetched"`
+	FeedDescription string `dynamo:"FeedDescriptiom"`
+	FeedImageURL    string `dynamo:"FeedImageURL"`
 	FeedLastUpdated time.Time
 	Categories      []Category
 	FeedEntry       []FeedEntry
@@ -41,14 +40,13 @@ type Feed struct {
 
 // FeedEntry data model
 type FeedEntry struct {
-	gorm.Model
-	FeedEntryTitle            string `gorm:"unique_index"`
-	FeedEntryURL              string
-	FeedEntryPublished        string
-	FeedEntryAuthor           string
-	FeedEntryContent          string
-	FeedEntryContentSanitized string
-	FeedEntryLink             string
+	FeedEntryTitle            string `dynamo:"FeedEntryTitle"`
+	FeedEntryURL              string `dynamo:"FeedEntryURL"`
+	FeedEntryPublished        string `dynamo:"FeedEntryPublished"`
+	FeedEntryAuthor           string `dynamo:"FeedEntryAuthor"`
+	FeedEntryContent          string `dynamo:"FeedEntryContent"`
+	FeedEntryContentSanitized string `dynamo:"FeedEntryContentSanitized"`
+	FeedEntryLink             string `dynamo:"FeedEntryLink"`
 	FeedID                    uint
 }
 
@@ -76,30 +74,33 @@ var ErrorForbidden = errors.New("Forbidden")
 var ErrorNotFound = errors.New("Not found")
 
 // Init migrates the database, in the future add a feature flag to know when to migrate
-func Init(dbURL string) {
+func Init() {
 
-	var err error
-
-	db, err = gorm.Open("postgres", dbURL)
+	feedsTable := db.Table(getFeedsTableName)
+	err := feedsTable.Put(feeds).Run()
 	if err != nil {
-		raven.CaptureErrorAndWait(err, nil)
-		panic("Unable to connect to DB")
+		log.Println("%+v\n", err)
 	}
 
-	db.AutoMigrate(&Category{})
-	db.AutoMigrate(&Feed{})
-	db.AutoMigrate(&FeedEntry{})
-	fmt.Println("We have migrated the database")
+}
 
-	db.Unscoped().Delete(&categories)
-	db.Unscoped().Delete(&feeds)
-	fmt.Println("We have reset the database")
+func getFeedsTableName() string {
+	// Setup the table names as required for models
+	var tableName = aws.String(os.Getenv("DATABASE_FEEDS_TABLE"))
+	// return the table name as a string
+	return tableName
+}
 
-	for _, category := range categories {
-		db.Create(&category)
-	}
-	for _, feed := range feeds {
-		db.Create(&feed)
-	}
-	fmt.Println("We have seeded the database with feeds, feedEntries & categories")
+func getCategoriesTableName() string {
+	// Setup the table names as required for models
+	var tableName = aws.String(os.Getenv("DATABASE_CATEGORIES_TABLE"))
+	// return the table name as a string
+	return tableName
+}
+
+func getFeedEntriesTableName() string {
+	// Setup the table names as required for models
+	var tableName = aws.String(os.Getenv("DATABASE_FEEDENTRIES_TABLE"))
+	// return the table name as a string
+	return tableName
 }

@@ -30,7 +30,10 @@ func CheckJWT() negroni.HandlerFunc {
 			log.Println(err)
 			log.Println("Token is not valid:", token)
 			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte("Unauthorized"))
+			_, err = w.Write([]byte("Unauthorized"))
+			if err != nil {
+				log.Printf("%s", err)
+			}
 		} else {
 			// if the err isnt caught then token must be good so let them pass
 			log.Println("Token is valid, you shall pass!")
