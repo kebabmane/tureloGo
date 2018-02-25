@@ -5,8 +5,6 @@ import (
 	"os"
 	"time"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/guregu/dynamo"
 )
@@ -40,6 +38,7 @@ type Feed struct {
 
 // FeedEntry data model
 type FeedEntry struct {
+	FeedEntryID               uint
 	FeedEntryTitle            string `dynamo:"FeedEntryTitle"`
 	FeedEntryURL              string `dynamo:"FeedEntryURL"`
 	FeedEntryPublished        string `dynamo:"FeedEntryPublished"`
@@ -76,29 +75,23 @@ var ErrorNotFound = errors.New("Not found")
 // Init migrates the database, in the future add a feature flag to know when to migrate
 func Init() {
 
-	feedsTable := db.Table(getFeedsTableName)
-	err := feedsTable.Put(feeds).Run()
-	if err != nil {
-		log.Println("%+v\n", err)
-	}
-
 }
 
-func getFeedsTableName() string {
+func getFeedsTableName() *string {
 	// Setup the table names as required for models
 	var tableName = aws.String(os.Getenv("DATABASE_FEEDS_TABLE"))
 	// return the table name as a string
 	return tableName
 }
 
-func getCategoriesTableName() string {
+func getCategoriesTableName() *string {
 	// Setup the table names as required for models
 	var tableName = aws.String(os.Getenv("DATABASE_CATEGORIES_TABLE"))
 	// return the table name as a string
 	return tableName
 }
 
-func getFeedEntriesTableName() string {
+func getFeedEntriesTableName() *string {
 	// Setup the table names as required for models
 	var tableName = aws.String(os.Getenv("DATABASE_FEEDENTRIES_TABLE"))
 	// return the table name as a string

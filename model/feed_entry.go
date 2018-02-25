@@ -3,21 +3,29 @@ package model
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 
-	raven "github.com/getsentry/raven-go"
+	log "github.com/sirupsen/logrus"
 )
 
-// FetchAllFeedEntries is the model function which interfaces with the DB and returns a []byte of the category in json format.
+// FetchAllFeedEntries creates a new feed item and returns the []byte json object and an error.
 func FetchAllFeedEntries(id string) ([]byte, error) {
 
 	var feedEntries []FeedEntry
 
-	db.Where("feed_id = ?", id).Find(&feedEntries)
+	table := getFeedEntriesTableName()
+	feedEntryTable := db.Table(*table)
+
+	err := feedEntryTable.Scan().All(&feedEntries)
+
+	if err != nil {
+		log.Println("%+v\n", err)
+	}
 
 	if len(feedEntries) <= 0 {
 		err := errors.New("Not found")
 		{
-			return []byte("feedEntries not found"), err
+			return []byte("feed entries not found"), err
 		}
 	}
 
@@ -27,88 +35,69 @@ func FetchAllFeedEntries(id string) ([]byte, error) {
 	}
 }
 
-// CreateFeedEntry creates a new category item and returns the []byte json object and an error.
+// CreateFeedEntry creates a new feed item and returns the []byte json object and an error.
 func CreateFeedEntry(b []byte) ([]byte, error) {
 
 	var feedEntry FeedEntry
 
 	err := json.Unmarshal(b, &feedEntry)
 
+	table := getFeedEntriesTableName()
+	feedEntryTable := db.Table(*table)
+
+	err = feedEntryTable.Put(&feedEntry).Run()
+
 	if err != nil {
-		raven.CaptureErrorAndWait(err, nil)
 		return []byte("Something went wrong"), err
 	}
 
-	db.Save(&feedEntry)
-
-	return []byte("FeedEntry successfully created"), nil
+	return []byte("Feed entry successfully created"), nil
 }
 
 // FetchSingleFeedEntry gets a single feed based on param passed, returning []byte and error
 func FetchSingleFeedEntry(id string) ([]byte, error) {
 
 	var feedEntry FeedEntry
-	db.First(&feedEntry, id)
 
-	if feedEntry.ID == 0 {
+	table := getFeedEntriesTableName()
+	feedEntryTable := db.Table(*table)
+
+	err := feedEntryTable.Get("FeedEntryID", id).One(&feedEntry)
+
+	if feedEntry.FeedEntryID == 0 {
 		err := errors.New("Not found")
-		return []byte("feedEntry not found"), err
+		return []byte("feed entry not found"), err
 	}
+
+	fmt.Println("this is the feed: ", feedEntry)
 
 	js, err := json.Marshal(feedEntry)
 	if err != nil {
-		raven.CaptureErrorAndWait(err, nil)
-		js = []byte("Unable to convert feedEntry to JSON format")
+		js = []byte("Unable to convert feed entry to JSON format")
 	}
 
 	return js, err
 }
 
-// UpdateFeedEntry is the model function for PUT
-func UpdateFeedEntry(b []byte, id string) ([]byte, error) {
-
-	var feedEntry, updatedFeedEntry FeedEntry
-	db.First(&feedEntry, id)
-
-	if feedEntry.ID == 0 {
-		err := errors.New("Not found")
-		return []byte("feedEntry not found"), err
-	}
-
-	err := json.Unmarshal(b, &updatedFeedEntry)
-	if err != nil {
-		raven.CaptureErrorAndWait(err, nil)
-		return []byte("Malformed input"), err
-	}
-
-	js, err := json.Marshal(&feedEntry)
-	if err != nil {
-		raven.CaptureErrorAndWait(err, nil)
-		return []byte("Unable to marshal json"), err
-	}
-
-	return js, nil
-}
-
-// DeleteFeedEntry deletes the feed from the database
+// DeleteFeedEntry deletes the feed entry from the database
 func DeleteFeedEntry(id string) ([]byte, error) {
 
+	table := getFeedEntriesTableName()
+	feedEntryTable := db.Table(*table)
+
 	var feedEntry FeedEntry
-	db.First(&feedEntry, id)
+	err := feedEntryTable.Get("FeedEntryID", id).One(&feedEntry)
 
-	if feedEntry.ID == 0 {
-		// w.WriteHeader(http.StatusNotFound)
-		// w.Write([]byte("Todo not found"))
-		// return
+	if feedEntry.FeedEntryID == 0 {
+		err := errors.New("Not found")
+		return []byte("feed entry not found"), err
 	}
 
-	db.Delete(&feedEntry)
+	err = feedEntryTable.Delete("FeedEntryID", id).Run()
 
-	js, err := json.Marshal(&feedEntry)
 	if err != nil {
-		raven.CaptureErrorAndWait(err, nil)
-		panic("Unable to marshal feed into json")
+		log.Println("%+v\n", err)
 	}
 
-	return js, nil
+	return []byte("feed entry deleted"), err
 }

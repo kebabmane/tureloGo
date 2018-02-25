@@ -4,15 +4,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
+	log "github.com/sirupsen/logrus"
 )
 
-// FetchAllFeeds is the model function which interfaces with the DB and returns a []byte of the category in json format.
+// FetchAllFeeds is the model function which interfaces with the DB and returns a []byte of the feed in json format.
 func FetchAllFeeds() ([]byte, error) {
 
 	var feeds []Feed
 
 	table := getFeedsTableName()
-	feedTable := db.Table(table)
+	feedTable := db.Table(*table)
 
 	err := feedTable.Scan().All(&feeds)
 
@@ -29,7 +31,7 @@ func FetchAllFeeds() ([]byte, error) {
 	}
 }
 
-// CreateFeed creates a new category item and returns the []byte json object and an error.
+// CreateFeed creates a new feed item and returns the []byte json object and an error.
 func CreateFeed(b []byte) ([]byte, error) {
 
 	var feed Feed
@@ -37,7 +39,7 @@ func CreateFeed(b []byte) ([]byte, error) {
 	err := json.Unmarshal(b, &feed)
 
 	table := getFeedsTableName()
-	feedTable := db.Table(table)
+	feedTable := db.Table(*table)
 
 	err = feedTable.Put(&feed).Run()
 
@@ -54,7 +56,7 @@ func FetchSingleFeed(id string) ([]byte, error) {
 	var feed Feed
 
 	table := getFeedsTableName()
-	feedTable := db.Table(table)
+	feedTable := db.Table(*table)
 
 	err := feedTable.Get("FeedID", id).One(&feed)
 
@@ -76,10 +78,12 @@ func FetchSingleFeed(id string) ([]byte, error) {
 // UpdateFeed is the model function for PUT
 func UpdateFeed(b []byte, id string) ([]byte, error) {
 
-	var feed, updatedFeed Feed
-	db.First(&feed, id)
+	table := getFeedsTableName()
+	feedTable := db.Table(*table)
 
-	if feed.ID == 0 {
+	var feed, updatedFeed Feed
+
+	if feed.FeedID == 0 {
 		err := errors.New("Not found")
 		return []byte("feed not found"), err
 	}
@@ -89,13 +93,13 @@ func UpdateFeed(b []byte, id string) ([]byte, error) {
 		return []byte("Malformed input"), err
 	}
 
-	db.Model(&feed).Update("feed_name", updatedFeed.FeedName)
-	db.Model(&feed).Update("feed_url", updatedFeed.FeedURL)
-	db.Model(&feed).Update("feed_icon", updatedFeed.FeedIcon)
-	db.Model(&feed).Update("feeds_count", updatedFeed.FeedsCount)
-	db.Model(&feed).Update("last_fetched", updatedFeed.LastFeteched)
-	db.Model(&feed).Update("feed_description", updatedFeed.FeedName)
-	db.Model(&feed).Update("Feed_image_url", updatedFeed.FeedImageURL)
+	feedTable.Update("feed_name", updatedFeed.FeedName)
+	feedTable.Update("feed_url", updatedFeed.FeedURL)
+	feedTable.Update("feed_icon", updatedFeed.FeedIcon)
+	feedTable.Update("feeds_count", updatedFeed.FeedsCount)
+	feedTable.Update("last_fetched", updatedFeed.LastFeteched)
+	feedTable.Update("feed_description", updatedFeed.FeedName)
+	feedTable.Update("Feed_image_url", updatedFeed.FeedImageURL)
 
 	js, err := json.Marshal(&feed)
 	if err != nil {
@@ -108,21 +112,22 @@ func UpdateFeed(b []byte, id string) ([]byte, error) {
 // DeleteFeed deletes the feed from the database
 func DeleteFeed(id string) ([]byte, error) {
 
+	table := getFeedsTableName()
+	feedTable := db.Table(*table)
+
 	var feed Feed
-	db.First(&feed, id)
+	err := feedTable.Get("FeedID", id).One(&feed)
 
-	if feed.ID == 0 {
-		// w.WriteHeader(http.StatusNotFound)
-		// w.Write([]byte("Todo not found"))
-		// return
+	if feed.FeedID == 0 {
+		err := errors.New("Not found")
+		return []byte("feed not found"), err
 	}
 
-	db.Delete(&feed)
+	err = feedTable.Delete("FeedID", id).Run()
 
-	js, err := json.Marshal(&feed)
 	if err != nil {
-		panic("Unable to marshal feed into json")
+		log.Println("%+v\n", err)
 	}
 
-	return js, nil
+	return []byte("feed deleted"), err
 }

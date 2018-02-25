@@ -13,7 +13,7 @@ func FetchAllCategories() ([]byte, error) {
 	var categories []Category
 
 	table := getCategoriesTableName()
-	categoryTable := db.Table(table)
+	categoryTable := db.Table(*table)
 
 	err := categoryTable.Scan().All(&categories)
 
@@ -42,7 +42,7 @@ func CreateCategory(b []byte) ([]byte, error) {
 	err := json.Unmarshal(b, &category)
 
 	table := getCategoriesTableName()
-	categoryTable := db.Table(table)
+	categoryTable := db.Table(*table)
 
 	err = categoryTable.Put(&category).Run()
 
@@ -58,7 +58,7 @@ func CreateCategory(b []byte) ([]byte, error) {
 func FetchSingleCategory(id string) ([]byte, error) {
 
 	table := getCategoriesTableName()
-	categoryTable := db.Table(table)
+	categoryTable := db.Table(*table)
 
 	var category Category
 
@@ -82,7 +82,7 @@ func FetchSingleCategory(id string) ([]byte, error) {
 func UpdateCategory(b []byte, id string) ([]byte, error) {
 
 	table := getCategoriesTableName()
-	categoryTable := db.Table(table)
+	categoryTable := db.Table(*table)
 
 	var category, updatedCategory Category
 
@@ -118,7 +118,7 @@ func UpdateCategory(b []byte, id string) ([]byte, error) {
 func DeleteCategory(id string) ([]byte, error) {
 
 	table := getCategoriesTableName()
-	categoryTable := db.Table(table)
+	categoryTable := db.Table(*table)
 
 	var category Category
 	err := categoryTable.Get("CategoryID", id).One(&category)
