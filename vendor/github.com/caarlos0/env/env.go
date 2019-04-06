@@ -1,6 +1,7 @@
 package env
 
 import (
+	"encoding"
 	"errors"
 	"fmt"
 	"os"
@@ -18,13 +19,18 @@ var (
 	ErrUnsupportedType = errors.New("Type is not supported")
 	// ErrUnsupportedSliceType if the slice element type is not supported by env
 	ErrUnsupportedSliceType = errors.New("Unsupported slice type")
+	// OnEnvVarSet is an optional convenience callback, such as for logging purposes.
+	// If not nil, it's called after successfully setting the given field from the given value.
+	OnEnvVarSet func(reflect.StructField, string)
 	// Friendly names for reflect types
-	sliceOfInts     = reflect.TypeOf([]int(nil))
-	sliceOfInt64s   = reflect.TypeOf([]int64(nil))
-	sliceOfStrings  = reflect.TypeOf([]string(nil))
-	sliceOfBools    = reflect.TypeOf([]bool(nil))
-	sliceOfFloat32s = reflect.TypeOf([]float32(nil))
-	sliceOfFloat64s = reflect.TypeOf([]float64(nil))
+	sliceOfInts      = reflect.TypeOf([]int(nil))
+	sliceOfInt64s    = reflect.TypeOf([]int64(nil))
+	sliceOfUint64s   = reflect.TypeOf([]uint64(nil))
+	sliceOfStrings   = reflect.TypeOf([]string(nil))
+	sliceOfBools     = reflect.TypeOf([]bool(nil))
+	sliceOfFloat32s  = reflect.TypeOf([]float32(nil))
+	sliceOfFloat64s  = reflect.TypeOf([]float64(nil))
+	sliceOfDurations = reflect.TypeOf([]time.Duration(nil))
 )
 
 // CustomParsers is a friendly name for the type that `ParseWithFuncs()` accepts
@@ -66,24 +72,35 @@ func doParse(ref reflect.Value, funcMap CustomParsers) error {
 	var errorList []string
 
 	for i := 0; i < refType.NumField(); i++ {
-		if reflect.Ptr == ref.Field(i).Kind() && !ref.Field(i).IsNil() && ref.Field(i).CanSet() {
-			err := Parse(ref.Field(i).Interface())
+		refField := ref.Field(i)
+		if reflect.Ptr == refField.Kind() && !refField.IsNil() && refField.CanSet() {
+			err := Parse(refField.Interface())
 			if nil != err {
 				return err
 			}
 			continue
 		}
-		value, err := get(refType.Field(i))
+		refTypeField := refType.Field(i)
+		value, err := get(refTypeField)
 		if err != nil {
 			errorList = append(errorList, err.Error())
 			continue
 		}
 		if value == "" {
+			if reflect.Struct == refField.Kind() {
+				err := doParse(refField, funcMap)
+				if nil != err {
+					errorList = append(errorList, err.Error())
+				}
+			}
 			continue
 		}
-		if err := set(ref.Field(i), refType.Field(i), value, funcMap); err != nil {
+		if err := set(refField, refTypeField, value, funcMap); err != nil {
 			errorList = append(errorList, err.Error())
 			continue
+		}
+		if OnEnvVarSet != nil {
+			OnEnvVarSet(refTypeField, value)
 		}
 	}
 	if len(errorList) == 0 {
@@ -103,6 +120,11 @@ func get(field reflect.StructField) (string, error) {
 	defaultValue := field.Tag.Get("envDefault")
 	val = getOr(key, defaultValue)
 
+	expandVar := field.Tag.Get("envExpand")
+	if strings.ToLower(expandVar) == "true" {
+		val = os.ExpandEnv(val)
+	}
+
 	if len(opts) > 0 {
 		for _, opt := range opts {
 			// The only option supported is "required".
@@ -112,7 +134,7 @@ func get(field reflect.StructField) (string, error) {
 			case "required":
 				val, err = getRequired(key)
 			default:
-				err = errors.New("Env tag option " + opt + " not supported.")
+				err = fmt.Errorf("env tag option %q not supported", opt)
 			}
 		}
 	}
@@ -130,8 +152,7 @@ func getRequired(key string) (string, error) {
 	if value, ok := os.LookupEnv(key); ok {
 		return value, nil
 	}
-	// We do not use fmt.Errorf to avoid another import.
-	return "", errors.New("Required environment variable " + key + " is not set")
+	return "", fmt.Errorf("required environment variable %q is not set", key)
 }
 
 func getOr(key, defaultValue string) string {
@@ -143,6 +164,18 @@ func getOr(key, defaultValue string) string {
 }
 
 func set(field reflect.Value, refType reflect.StructField, value string, funcMap CustomParsers) error {
+	// use custom parser if configured for this type
+	parserFunc, ok := funcMap[refType.Type]
+	if ok {
+		val, err := parserFunc(value)
+		if err != nil {
+			return fmt.Errorf("Custom parser error: %v", err)
+		}
+		field.Set(reflect.ValueOf(val))
+		return nil
+	}
+
+	// fall back to built-in parsers
 	switch field.Kind() {
 	case reflect.Slice:
 		separator := refType.Tag.Get("envSeparator")
@@ -161,8 +194,64 @@ func set(field reflect.Value, refType reflect.StructField, value string, funcMap
 			return err
 		}
 		field.SetInt(intValue)
+	case reflect.Int8:
+		intValue, err := strconv.ParseInt(value, 10, 8)
+		if err != nil {
+			return err
+		}
+		field.SetInt(intValue)
+	case reflect.Int16:
+		intValue, err := strconv.ParseInt(value, 10, 16)
+		if err != nil {
+			return err
+		}
+		field.SetInt(intValue)
+	case reflect.Int32:
+		intValue, err := strconv.ParseInt(value, 10, 32)
+		if err != nil {
+			return err
+		}
+		field.SetInt(intValue)
+	case reflect.Int64:
+		if refType.Type.String() == "time.Duration" {
+			dValue, err := time.ParseDuration(value)
+			if err != nil {
+				return err
+			}
+			field.Set(reflect.ValueOf(dValue))
+		} else {
+			intValue, err := strconv.ParseInt(value, 10, 64)
+			if err != nil {
+				return err
+			}
+			field.SetInt(intValue)
+		}
 	case reflect.Uint:
 		uintValue, err := strconv.ParseUint(value, 10, 32)
+		if err != nil {
+			return err
+		}
+		field.SetUint(uintValue)
+	case reflect.Uint8:
+		uintValue, err := strconv.ParseUint(value, 10, 8)
+		if err != nil {
+			return err
+		}
+		field.SetUint(uintValue)
+	case reflect.Uint16:
+		uintValue, err := strconv.ParseUint(value, 10, 16)
+		if err != nil {
+			return err
+		}
+		field.SetUint(uintValue)
+	case reflect.Uint32:
+		uintValue, err := strconv.ParseUint(value, 10, 32)
+		if err != nil {
+			return err
+		}
+		field.SetUint(uintValue)
+	case reflect.Uint64:
+		uintValue, err := strconv.ParseUint(value, 10, 64)
 		if err != nil {
 			return err
 		}
@@ -179,46 +268,9 @@ func set(field reflect.Value, refType reflect.StructField, value string, funcMap
 			return err
 		}
 		field.Set(reflect.ValueOf(v))
-	case reflect.Int64:
-		if refType.Type.String() == "time.Duration" {
-			dValue, err := time.ParseDuration(value)
-			if err != nil {
-				return err
-			}
-			field.Set(reflect.ValueOf(dValue))
-		} else {
-			intValue, err := strconv.ParseInt(value, 10, 64)
-			if err != nil {
-				return err
-			}
-			field.SetInt(intValue)
-		}
-	case reflect.Struct:
-		return handleStruct(field, refType, value, funcMap)
 	default:
-		return ErrUnsupportedType
+		return handleTextUnmarshaler(field, value)
 	}
-	return nil
-}
-
-func handleStruct(field reflect.Value, refType reflect.StructField, value string, funcMap CustomParsers) error {
-	// Does the custom parser func map contain this type?
-	parserFunc, ok := funcMap[field.Type()]
-	if !ok {
-		// Map does not contain a custom parser for this type
-		return ErrUnsupportedType
-	}
-
-	// Call on the custom parser func
-	data, err := parserFunc(value)
-	if err != nil {
-		return fmt.Errorf("Custom parser error: %v", err)
-	}
-
-	// Set the field to the data returned by the customer parser func
-	rv := reflect.ValueOf(data)
-	field.Set(rv)
-
 	return nil
 }
 
@@ -244,7 +296,12 @@ func handleSlice(field reflect.Value, value, separator string) error {
 			return err
 		}
 		field.Set(reflect.ValueOf(int64Data))
-
+	case sliceOfUint64s:
+		uint64Data, err := parseUint64s(splitData)
+		if err != nil {
+			return err
+		}
+		field.Set(reflect.ValueOf(uint64Data))
 	case sliceOfFloat32s:
 		data, err := parseFloat32s(splitData)
 		if err != nil {
@@ -263,14 +320,46 @@ func handleSlice(field reflect.Value, value, separator string) error {
 			return err
 		}
 		field.Set(reflect.ValueOf(boolData))
+	case sliceOfDurations:
+		durationData, err := parseDurations(splitData)
+		if err != nil {
+			return err
+		}
+		field.Set(reflect.ValueOf(durationData))
 	default:
-		return ErrUnsupportedSliceType
+		elemType := field.Type().Elem()
+		// Ensure we test *type as we can always address elements in a slice.
+		if elemType.Kind() == reflect.Ptr {
+			elemType = elemType.Elem()
+		}
+		if _, ok := reflect.New(elemType).Interface().(encoding.TextUnmarshaler); !ok {
+			return ErrUnsupportedSliceType
+		}
+		return parseTextUnmarshalers(field, splitData)
+
 	}
 	return nil
 }
 
+func handleTextUnmarshaler(field reflect.Value, value string) error {
+	if reflect.Ptr == field.Kind() {
+		if field.IsNil() {
+			field.Set(reflect.New(field.Type().Elem()))
+		}
+	} else if field.CanAddr() {
+		field = field.Addr()
+	}
+
+	tm, ok := field.Interface().(encoding.TextUnmarshaler)
+	if !ok {
+		return ErrUnsupportedType
+	}
+
+	return tm.UnmarshalText([]byte(value))
+}
+
 func parseInts(data []string) ([]int, error) {
-	var intSlice []int
+	intSlice := make([]int, 0, len(data))
 
 	for _, v := range data {
 		intValue, err := strconv.ParseInt(v, 10, 32)
@@ -283,7 +372,7 @@ func parseInts(data []string) ([]int, error) {
 }
 
 func parseInt64s(data []string) ([]int64, error) {
-	var intSlice []int64
+	intSlice := make([]int64, 0, len(data))
 
 	for _, v := range data {
 		intValue, err := strconv.ParseInt(v, 10, 64)
@@ -295,8 +384,21 @@ func parseInt64s(data []string) ([]int64, error) {
 	return intSlice, nil
 }
 
+func parseUint64s(data []string) ([]uint64, error) {
+	var uintSlice []uint64
+
+	for _, v := range data {
+		uintValue, err := strconv.ParseUint(v, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		uintSlice = append(uintSlice, uint64(uintValue))
+	}
+	return uintSlice, nil
+}
+
 func parseFloat32s(data []string) ([]float32, error) {
-	var float32Slice []float32
+	float32Slice := make([]float32, 0, len(data))
 
 	for _, v := range data {
 		data, err := strconv.ParseFloat(v, 32)
@@ -309,7 +411,7 @@ func parseFloat32s(data []string) ([]float32, error) {
 }
 
 func parseFloat64s(data []string) ([]float64, error) {
-	var float64Slice []float64
+	float64Slice := make([]float64, 0, len(data))
 
 	for _, v := range data {
 		data, err := strconv.ParseFloat(v, 64)
@@ -322,7 +424,7 @@ func parseFloat64s(data []string) ([]float64, error) {
 }
 
 func parseBools(data []string) ([]bool, error) {
-	var boolSlice []bool
+	boolSlice := make([]bool, 0, len(data))
 
 	for _, v := range data {
 		bvalue, err := strconv.ParseBool(v)
@@ -333,4 +435,44 @@ func parseBools(data []string) ([]bool, error) {
 		boolSlice = append(boolSlice, bvalue)
 	}
 	return boolSlice, nil
+}
+
+func parseDurations(data []string) ([]time.Duration, error) {
+	durationSlice := make([]time.Duration, 0, len(data))
+
+	for _, v := range data {
+		dvalue, err := time.ParseDuration(v)
+		if err != nil {
+			return nil, err
+		}
+
+		durationSlice = append(durationSlice, dvalue)
+	}
+	return durationSlice, nil
+}
+
+func parseTextUnmarshalers(field reflect.Value, data []string) error {
+	s := len(data)
+	elemType := field.Type().Elem()
+	slice := reflect.MakeSlice(reflect.SliceOf(elemType), s, s)
+	for i, v := range data {
+		sv := slice.Index(i)
+		kind := sv.Kind()
+		if kind == reflect.Ptr {
+			sv = reflect.New(elemType.Elem())
+		} else {
+			sv = sv.Addr()
+		}
+		tm := sv.Interface().(encoding.TextUnmarshaler)
+		if err := tm.UnmarshalText([]byte(v)); err != nil {
+			return err
+		}
+		if kind == reflect.Ptr {
+			slice.Index(i).Set(sv)
+		}
+	}
+
+	field.Set(slice)
+
+	return nil
 }
