@@ -34,6 +34,8 @@ type Config struct {
 
 func main() {
 
+	raven.SetDSN("https://6acd6b8ad3384643819406da03fd5230:563c99698b5042d382c47b1745c21ba0@sentry.io/289770")
+
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "Version: %s Commit: %s Branch: %s Date: %s\n", app.Version, app.Commit, app.Branch, app.BuildDate)
