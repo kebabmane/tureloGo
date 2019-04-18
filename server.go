@@ -10,9 +10,7 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/kebabmane/tureloGo/app"
-	"github.com/kebabmane/tureloGo/db"
-	"github.com/kebabmane/tureloGo/healthz"
-	"github.com/kebabmane/tureloGo/middlewares"
+	"github.com/kebabmane/tureloGo/config"
 	"github.com/kebabmane/tureloGo/router"
 	_ "github.com/lib/pq"
 	"github.com/rs/cors"
@@ -23,18 +21,12 @@ import (
 // Config is a global struct
 type Config struct {
 	Port              int    `env:"SERVER_PORT" envDefault:"8080"`
-	IsProduction      bool   `env:"IS_PRODUCTION,required"`
 	HealthName        string `env:"HEALTH_NAME"`
-	AwsRegion         string `env:"AWS_REGION"`
 	NegroniLoggerName string `env:"NEGRONI_LOGGER_NAME"`
 	VerboseLogging    bool   `env:"VERBOSE_LOGGING,required"`
-	DatabaseURL       string `env:"DATABASE_URL"`
-	DatabaseEndpoint  string `env:"DATABASE_ENDPOINT"`
 }
 
 func main() {
-
-	raven.SetDSN("https://6acd6b8ad3384643819406da03fd5230:563c99698b5042d382c47b1745c21ba0@sentry.io/289770")
 
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
@@ -59,11 +51,10 @@ func main() {
 	// set the log format to JSON
 	log.SetFormatter(&log.JSONFormatter{})
 
-	// start the health checks
-	healthz.SetupHealthChecks()
-
 	// migrate and setup the database object
-	db.Init(cfg.AwsRegion, cfg.DatabaseEndpoint)
+	db := config.Init()
+
+	defer db.Close()
 
 	// set up router
 	r := mux.NewRouter()
@@ -77,7 +68,7 @@ func main() {
 	// setup the path prefix and put it through the CheckJWT middleware function
 	r.PathPrefix("/v1").Handler(negroni.New(
 		negroni.NewRecovery(),
-		negroni.HandlerFunc(middlewares.CheckJWT()),
+		//negroni.HandlerFunc(middlewares.CheckJWT()),
 		negroni.NewLogger(),
 		negroni.Wrap(v1),
 	))

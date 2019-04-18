@@ -2,35 +2,32 @@ package model
 
 import (
 	"errors"
-	"os"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/guregu/dynamo"
+	"github.com/jinzhu/gorm"
 )
-
-// declare DB
-var db *dynamo.DB
 
 // Category data model
 type Category struct {
-	CategoryName        string `dynamo:"CategoryName"`
-	CategoryImageURL    string `dynamo:"DatabaseImageURL"`
-	CategoryDescription string `dynamo:"CategoryDescription"`
-	FeedsCount          string `dynamo:"FeedsCount"`
-	CategoryID          uint   // Hash key
+	gorm.Model
+	CategoryName        string
+	CategoryImageURL    string
+	CategoryDescription string
+	FeedsCount          string
+	CategoryID          uint // Hash key
 }
 
 // Feed data model
 type Feed struct {
+	gorm.Model
 	FeedID          uint
-	FeedName        string `dynamo:"FeedName"`
-	FeedURL         string `dynamo:"FeedURL"`
-	FeedIcon        string `dynamo:"FeedIcon"`
-	FeedsCount      string `dynamo:"FeedsCount"`
-	LastFeteched    string `dynamo:"LastFetched"`
-	FeedDescription string `dynamo:"FeedDescriptiom"`
-	FeedImageURL    string `dynamo:"FeedImageURL"`
+	FeedName        string
+	FeedURL         string
+	FeedIcon        string
+	FeedsCount      string
+	LastFeteched    string
+	FeedDescription string
+	FeedImageURL    string
 	FeedLastUpdated time.Time
 	Categories      []Category
 	FeedEntry       []FeedEntry
@@ -38,26 +35,16 @@ type Feed struct {
 
 // FeedEntry data model
 type FeedEntry struct {
+	gorm.Model
 	FeedEntryID               uint
-	FeedEntryTitle            string `dynamo:"FeedEntryTitle"`
-	FeedEntryURL              string `dynamo:"FeedEntryURL"`
-	FeedEntryPublished        string `dynamo:"FeedEntryPublished"`
-	FeedEntryAuthor           string `dynamo:"FeedEntryAuthor"`
-	FeedEntryContent          string `dynamo:"FeedEntryContent"`
-	FeedEntryContentSanitized string `dynamo:"FeedEntryContentSanitized"`
-	FeedEntryLink             string `dynamo:"FeedEntryLink"`
+	FeedEntryTitle            string
+	FeedEntryURL              string
+	FeedEntryPublished        string
+	FeedEntryAuthor           string
+	FeedEntryContent          string
+	FeedEntryContentSanitized string
+	FeedEntryLink             string
 	FeedID                    uint
-}
-
-// Seeding tables:
-var categories []Category = []Category{
-	Category{CategoryName: "technology", CategoryImageURL: "https://www.imore.com/sites/imore.com/files/styles/xlarge/public/field/image/2016/03/ipad-mini-ipad-air-ipad-pro-stack-snow-hero.jpg?itok=ir4jkST2", CategoryDescription: "this is where we put some technology stuff"},
-	Category{CategoryName: "health", CategoryImageURL: "https://lorempixel.com/600/300/food/5/", CategoryDescription: "this is where we put some health stuff"},
-	Category{CategoryName: "medical", CategoryImageURL: "https://lorempixel.com/600/300/food/5/", CategoryDescription: "this is where we put some medical stuff"},
-}
-
-var feeds []Feed = []Feed{
-	Feed{FeedName: "The Verge -  All Posts", FeedURL: "http://theverge.com/rss/index.xml", FeedDescription: "this is where we put some technology stuff", FeedIcon: "https://cdn.vox-cdn.com/community_logos/52801/VER_Logomark_32x32..png"},
 }
 
 // ErrorBadRequest is the bad request string
@@ -71,29 +58,3 @@ var ErrorForbidden = errors.New("Forbidden")
 
 // ErrorNotFound is the not found error
 var ErrorNotFound = errors.New("Not found")
-
-// Init migrates the database, in the future add a feature flag to know when to migrate
-func Init() {
-
-}
-
-func getFeedsTableName() *string {
-	// Setup the table names as required for models
-	var tableName = aws.String(os.Getenv("DATABASE_FEEDS_TABLE"))
-	// return the table name as a string
-	return tableName
-}
-
-func getCategoriesTableName() *string {
-	// Setup the table names as required for models
-	var tableName = aws.String(os.Getenv("DATABASE_CATEGORIES_TABLE"))
-	// return the table name as a string
-	return tableName
-}
-
-func getFeedEntriesTableName() *string {
-	// Setup the table names as required for models
-	var tableName = aws.String(os.Getenv("DATABASE_FEEDENTRIES_TABLE"))
-	// return the table name as a string
-	return tableName
-}
