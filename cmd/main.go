@@ -13,7 +13,6 @@ import (
 	"github.com/rs/cors"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/negroni"
-	"gitlab.com/warpspeed6/k8-integration-demo/app"
 )
 
 // Config is a global struct
